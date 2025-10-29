@@ -1,8 +1,8 @@
-import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 import HomeScreen from './Pages/homeScree1';
+import ProfileScreen from './Pages/profileScreen';
 
 // import SettingsScreen from './screens/SettingsScreen';
 // import ProfileScreen from './screens/ProfileScreen';
@@ -34,7 +34,7 @@ export default function App() {
         })}
       >
         <Tab.Screen name="Home" component={HomeScreen} />
-        {/* <Tab.Screen name="Profile" component={ProfileScreen} /> */}
+        <Tab.Screen name="Profile" component={ProfileScreen} />
         {/* <Tab.Screen name="Settings" component={SettingsScreen} /> */}
       </Tab.Navigator>
     </NavigationContainer>

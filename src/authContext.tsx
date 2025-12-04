@@ -23,7 +23,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkToken = async () => {
       console.log('entry check');
-      
       try {
         const token = await AsyncStorage.getItem('token');
         if (token) setIsAuthenticated(true);
@@ -38,8 +37,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const login = async (token: string) => {
-    console.log('token',token);
-    
     await AsyncStorage.setItem('token', token);
     setIsAuthenticated(true);
   };

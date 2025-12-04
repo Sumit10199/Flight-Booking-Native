@@ -9,13 +9,15 @@ import { name as appName } from './app.json';
 import RootNavigator from './src/rootNavigator'; // your main navigator
 import { Store, persistor } from './src/Store/Store'; // adjust path if needed
 import { NavigationContainer } from '@react-navigation/native';
+import { AuthProvider } from './src/authContext';
 
 const Root = () => (
   <Provider store={Store}>
     <PersistGate loading={null} persistor={persistor}>
-      <NavigationContainer>
-      <RootNavigator />
-      </NavigationContainer>
+        <AuthProvider>
+          <RootNavigator />
+        </AuthProvider>
+      {/* </NavigationContainer> */}
     </PersistGate>
   </Provider>
 );

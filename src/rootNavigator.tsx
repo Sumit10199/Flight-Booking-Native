@@ -4,7 +4,6 @@ import { AuthContext } from './authContext';
 import App from './navigator';
 import { AuthStack } from './authNavigator';
 import { Text, View } from 'react-native';
-import LoginScreen from './Pages/Login/login';
 
 export default function RootNavigator() {
     const { isAuthenticated, isLoading } = useContext(AuthContext);

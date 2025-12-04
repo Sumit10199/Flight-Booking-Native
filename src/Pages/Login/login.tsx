@@ -36,10 +36,7 @@ export default function LoginScreen({ navigation }: any) {
                 }
             })
 
-            console.log('response',response);
             if (response.data.status && response.status === 200) {
-                console.log('response.data.token',response.data.token);
-                
                 login(response.data.token); 
             }
         } catch (error) {

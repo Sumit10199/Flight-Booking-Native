@@ -16,7 +16,7 @@ export default function App() {
         screenOptions={({ route }) => ({
           headerShown: false,
           tabBarIcon: ({ focused, color, size }) => {
-            let iconName;
+            let iconName:string="";
 
             if (route.name === 'Home') {
               iconName = focused ? 'home' : 'home-outline';

@@ -9,13 +9,13 @@ import LoginScreen from './Pages/Login/login';
 export default function RootNavigator() {
     const { isAuthenticated, isLoading } = useContext(AuthContext);
 
-    // if (isLoading) {
-    //     return (
-    //         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
-    //             <Text style={{ color: '#fff', fontSize: 16 }}>Loading...</Text>
-    //         </View>
-    //     );
-    // }
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
+                <Text style={{ color: '#fff', fontSize: 16 }}>Loading...</Text>
+            </View>
+        );
+    }
 
     if (!isAuthenticated) {
         return <AuthStack />;

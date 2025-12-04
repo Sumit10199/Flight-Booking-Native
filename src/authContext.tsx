@@ -1,5 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useEffect, useState } from 'react';
-import { storage } from './storage';
+// import { storage } from './storage';
 
 type AuthContextType = {
   isLoading: boolean;
@@ -11,27 +12,40 @@ type AuthContextType = {
 export const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   isAuthenticated: false,
-  login: () => {},
-  logout: () => {},
+  login: () => { },
+  logout: () => { },
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const token = storage.getString('token');
-    if (token) setIsAuthenticated(true);
-    setIsLoading(false);
+    const checkToken = async () => {
+      console.log('entry check');
+      
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (token) setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Error reading token:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkToken();
   }, []);
 
-  const login = (token: string) => {
-    storage.set('token', token);
+  const login = async (token: string) => {
+    console.log('token',token);
+    
+    await AsyncStorage.setItem('token', token);
     setIsAuthenticated(true);
   };
 
-  const logout = () => {
-    storage.remove('token');
+  const logout = async() => {
+    await AsyncStorage.removeItem('token');
     setIsAuthenticated(false);
   };
 

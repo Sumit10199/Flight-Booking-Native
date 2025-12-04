@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import { AuthContext } from '../../authContext';
 import { styles } from './style';
+import { postData } from '../../utils/axios';
+import { endpoints } from '../../utils/endpoints';
 
 export default function LoginScreen({ navigation }: any) {
     const { login } = useContext(AuthContext);
@@ -22,10 +24,29 @@ export default function LoginScreen({ navigation }: any) {
             return;
         }
 
-        // ✅ FAKE API CALL
-        const fakeToken = `token-${Date.now()}`;
+        try {
+            const response: {
+                status: any;
+                data: any;
+            } = await postData({
+                url: endpoints.LOGIN_AGENT,
+                body: {
+                    email_id: email,
+                    password: password
+                }
+            })
 
-        login(fakeToken); // 👉 auto switches navigator
+            console.log('response',response);
+            if (response.data.status && response.status === 200) {
+                console.log('response.data.token',response.data.token);
+                
+                login(response.data.token); 
+            }
+        } catch (error) {
+            console.log('error',error);
+
+        }
+
     };
 
     // return (
@@ -35,33 +56,33 @@ export default function LoginScreen({ navigation }: any) {
     // );
 
 
-      return (
+    return (
         <View style={styles.container}>
-          <Text style={styles.title}>Sign In</Text>
+            <Text style={styles.title}>Sign In</Text>
 
-          <TextInput
-            placeholder="Email"
-            autoCapitalize="none"
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-          />
+            <TextInput
+                placeholder="Email"
+                autoCapitalize="none"
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+            />
 
-          <TextInput
-            placeholder="Password"
-            secureTextEntry
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-          />
+            <TextInput
+                placeholder="Password"
+                secureTextEntry
+                style={styles.input}
+                value={password}
+                onChangeText={setPassword}
+            />
 
-          <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Login</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
+                <Text style={styles.buttonText}>Login</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-            <Text style={styles.link}>Create an account</Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+                <Text style={styles.link}>Create an account</Text>
+            </TouchableOpacity>
         </View>
-      );
+    );
 }

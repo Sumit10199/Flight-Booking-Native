@@ -1,5 +1,5 @@
-import { createMMKV } from 'react-native-mmkv';
+// import { createMMKV } from 'react-native-mmkv';
 
-export const storage = createMMKV({
-  id: 'auth-storage',
-});
+// export const storage = createMMKV({
+//   id: 'auth-storage',
+// });

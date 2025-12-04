@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // ⚠️ Localhost won't work in React Native emulator/phone
 // Replace with your machine IP if running locally, e.g.:
 // const BASE_URL = "http://192.168.1.10:3001";
-const BASE_URL = "http://localhost:3001";
+const BASE_URL = "https://a3adbf150383.ngrok-free.app";
 
 interface IFaceGlobalResponseType<T> {
   status: number;
@@ -68,6 +68,8 @@ export const fetchData = async ({
   url: string;
   abortSignal?: AbortSignal;
 }) => {
+  console.log('url', url);
+
   const response = await axiosInstance.get(url, { signal: abortSignal });
   return {
     status: response.status,
@@ -86,6 +88,8 @@ export const postData = async <T>({
   body,
   abortSignal,
 }: IFacePostData<T>) => {
+  console.log('url', url);
+
   const response = await axiosInstance.post(url, body, { signal: abortSignal });
   return {
     status: response.status,

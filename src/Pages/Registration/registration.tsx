@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   View,
   Text,
@@ -17,11 +17,15 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { useNavigation } from '@react-navigation/native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { postData } from '../../utils/axios';
+import { endpoints } from '../../utils/endpoints';
+import { AuthContext } from '../../authContext';
 
 const Registration = () => {
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const navigation = useNavigation<any>();
+  const { login } = useContext(AuthContext);
   const genderData = [
     { label: 'Male', value: 'Male' },
     { label: 'Female', value: 'Female' },
@@ -46,8 +50,43 @@ const Registration = () => {
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = (data: any) => {
+  const onSubmit = async(data: any) => {
     console.log('Form Data:', data);
+
+    try {
+      const response: {
+        status: any;
+        data: any;
+      } = await postData({
+        url: endpoints.LOGIN_AGENT,
+        body: {
+          title: "Mr.",
+          first_name: "Sumit",
+          last_name: "Bhowmick",
+          company_name: "sumitstbk  enterprice",
+          country: "3",
+          address: "Barrackpore, bara kathalia",
+          state: "30",
+          city: "Kolkata",
+          postal: "700121",
+          email: "sumitstbk.1099@gmail.com",
+          phone: "7439898212",
+          password: "Tester@123",
+          conf_password: "Tester@123",
+          pan_card_holder_name: "SUmit bHowmcik",
+          pan_number: "EQFPB1234P",
+          gst_number: "27AAACT2727Q1ZW"
+        }
+      })
+
+      if (response.data.status && response.status === 200) {
+        login(response.data.token);
+      }
+    } catch (error) {
+      console.log('error', error);
+
+    }
+
   };
 
   return (
@@ -55,7 +94,7 @@ const Registration = () => {
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.card}>
           <View style={styles.headerRow}>
-            <TouchableOpacity onPress={() =>navigation.navigate("Login")}>
+            <TouchableOpacity onPress={() => navigation.navigate("Login")}>
               <MaterialIcons name="arrow-back-ios" color="#000" size={24} />
             </TouchableOpacity>
 

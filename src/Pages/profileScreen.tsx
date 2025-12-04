@@ -1,11 +1,15 @@
 // screens/HomeScreen.js
-import React from 'react';
-import { View, Text } from 'react-native';
+import React, { useContext } from 'react';
+import { View, Text, Button } from 'react-native';
+import { AuthContext } from '../authContext';
 
 export default function ProfileScreen() {
+  const { logout } = useContext(AuthContext);
+
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>Home Screen</Text>
+      <Button title="Logout" onPress={logout} />
+
     </View>
   );
 }

@@ -1,43 +1,98 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet } from 'react-native';
+
 
 export const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    backgroundColor: '#000', // ✅ add dark background
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    paddingTop:150,
   },
+
+  logo: {
+    width: 160,
+    height: 80,
+    marginBottom: 20,
+  },
+
+  card: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
+    elevation: 6,
+  },
+
   title: {
-    fontSize: 28,
-    fontWeight: '600',
-    marginBottom: 24,
+    fontSize: 16,
+    fontWeight: '500',
     textAlign: 'center',
-    color: '#fff', // ✅ make title white
+    marginBottom: 20,
+    color: '#444',
   },
+
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
-    padding: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     marginBottom: 16,
-    color: '#fff', // ✅ input text white
+    backgroundColor: '#f9f9f9',
+    color: '#000',
   },
-  button: {
-    backgroundColor: '#fff', // contrast button
-    padding: 16,
+
+  loginButton: {
+    backgroundColor: '#F28D20',
+    paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 5,
   },
-  buttonText: {
-    color: '#000', // text contrast for button
+
+  loginButtonText: {
+    color: '#fff',
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  link: {
-    marginTop: 20,
+
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 15,
+  },
+
+  line: {
+    height: 1,
+    flex: 1,
+    backgroundColor: '#ccc',
+  },
+
+  orText: {
+    marginHorizontal: 10,
+    color: '#777',
+  },
+
+  forgotText: {
     textAlign: 'center',
-    color: '#00f', // visible link color
+    color: '#444',
+    marginBottom: 15,
+  },
+
+  createButton: {
+    backgroundColor: '#F28D20',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+
+  createButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
-

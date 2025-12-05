@@ -11,7 +11,7 @@ import { AuthContext } from '../../authContext';
 import { styles } from './style';
 import { postData } from '../../utils/axios';
 import { endpoints } from '../../utils/endpoints';
-
+import {Image} from 'react-native';
 export default function LoginScreen({ navigation }: any) {
     const { login } = useContext(AuthContext);
 
@@ -23,6 +23,8 @@ export default function LoginScreen({ navigation }: any) {
             Alert.alert('Error', 'Email and password required');
             return;
         }
+        console.log(email,password);
+        
 
         try {
             const response: {
@@ -54,32 +56,57 @@ export default function LoginScreen({ navigation }: any) {
 
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Sign In</Text>
+      <View style={styles.screen}>
+        <Image 
+        source={require("../../../assets/logo.png")} 
+        style={styles.logo}
+        resizeMode="contain"
+    />
 
-            <TextInput
-                placeholder="Email"
-                autoCapitalize="none"
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-            />
+    <View style={styles.card}>
+        <Text style={styles.title}>Login to get more new things</Text>
 
-            <TextInput
-                placeholder="Password"
-                secureTextEntry
-                style={styles.input}
-                value={password}
-                onChangeText={setPassword}
-            />
+        <TextInput
+            placeholder="Enter your email"
+            placeholderTextColor="#777"
+            autoCapitalize="none"
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+        />
 
-            <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                <Text style={styles.buttonText}>Login</Text>
-            </TouchableOpacity>
+        <TextInput
+            placeholder="Password"
+            placeholderTextColor="#777"
+            secureTextEntry
+            style={styles.input}
+            value={password}
+            onChangeText={setPassword}
+        />
 
-            <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-                <Text style={styles.link}>Create an account</Text>
-            </TouchableOpacity>
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+            <Text style={styles.loginButtonText}>Log In</Text>
+        </TouchableOpacity>
+
+        <View style={styles.dividerContainer}>
+            <View style={styles.line} />
+            <Text style={styles.orText}>or</Text>
+            <View style={styles.line} />
         </View>
+
+        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+            <Text style={styles.forgotText}>Forget Password?</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+            style={styles.createButton}
+            onPress={() => navigation.navigate('Signup')}
+        >
+            <Text style={styles.createButtonText}>Create account</Text>
+        </TouchableOpacity>
+    </View>
+
+</View>
+
     );
 }

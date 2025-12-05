@@ -1,9 +1,10 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Config from "react-native-config";
 
 // ⚠️ Localhost won't work in React Native emulator/phone
 // Replace with your machine IP if running locally, e.g.:
-const BASE_URL = "http://192.168.0.103:3001";
+const BASE_URL = Config.BASE_URL;
 // const BASE_URL = "https://a3adbf150383.ngrok-free.app";
 
 interface IFaceGlobalResponseType<T> {

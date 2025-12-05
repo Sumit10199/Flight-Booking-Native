@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,11 @@ import {
 } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { passwordRules, schema } from './types';
+import { Input, passwordRules, schema } from './types';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { useNavigation } from '@react-navigation/native';
@@ -20,16 +21,16 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { postData } from '../../utils/axios';
 import { endpoints } from '../../utils/endpoints';
 import { AuthContext } from '../../authContext';
+import { styles } from './styles';
+import { FormInput } from '../../Components/FormInput/FormInput';
 
 const Registration = () => {
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const navigation = useNavigation<any>();
-  const { login } = useContext(AuthContext);
-  const genderData = [
-    { label: 'Male', value: 'Male' },
-    { label: 'Female', value: 'Female' },
-    { label: 'Other', value: 'Other' },
+  const TitleData = [
+    { label: 'Mr.', value: 'Mr.' },
+    { label: 'Mrs.', value: 'Mrs.' },
   ];
 
   const {
@@ -37,64 +38,60 @@ const Registration = () => {
     handleSubmit,
     formState: { errors },
     watch,
-  } = useForm({
+    reset,
+  } = useForm<Input>({
     defaultValues: {
       first_name: '',
       last_name: '',
       email: '',
       phone_number: '',
-      gender: '',
+      title: '',
       password: '',
       confirm_password: '',
     },
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = async(data: any) => {
-    console.log('Form Data:', data);
-
+  const onSubmit = async (data: Input) => {
     try {
-      const response: {
-        status: any;
-        data: any;
-      } = await postData({
-        url: endpoints.LOGIN_AGENT,
-        body: {
-          title: "Mr.",
-          first_name: "Sumit",
-          last_name: "Bhowmick",
-          company_name: "sumitstbk  enterprice",
-          country: "3",
-          address: "Barrackpore, bara kathalia",
-          state: "30",
-          city: "Kolkata",
-          postal: "700121",
-          email: "sumitstbk.1099@gmail.com",
-          phone: "7439898212",
-          password: "Tester@123",
-          conf_password: "Tester@123",
-          pan_card_holder_name: "SUmit bHowmcik",
-          pan_number: "EQFPB1234P",
-          gst_number: "27AAACT2727Q1ZW"
-        }
-      })
-
-      if (response.data.status && response.status === 200) {
-        login(response.data.token);
-      }
+      await AsyncStorage.setItem('registrationData', JSON.stringify(data));
+      navigation.navigate('business_information');
     } catch (error) {
-      console.log('error', error);
-
+      console.error(error);
     }
-
   };
+
+  useEffect(() => {
+    const retrieveRegistrationData = async () => {
+      try {
+        const data = await AsyncStorage.getItem('registrationData');
+        if (data) {
+          const parsedData: Input = JSON.parse(data);
+          console.log(parsedData, 'parsedData');
+          reset({
+            title: parsedData?.title,
+            first_name: parsedData?.first_name,
+            last_name: parsedData.last_name,
+            email: parsedData.email,
+            phone_number: parsedData?.phone_number,
+            password: parsedData?.password,
+            confirm_password: parsedData?.confirm_password,
+          });
+        }
+      } catch (error) {
+        console.error('Error retrieving registration data:', error);
+      }
+    };
+
+    retrieveRegistrationData();
+  }, []);
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.card}>
           <View style={styles.headerRow}>
-            <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
               <MaterialIcons name="arrow-back-ios" color="#000" size={24} />
             </TouchableOpacity>
 
@@ -102,18 +99,18 @@ const Registration = () => {
 
             <View style={{ width: 24 }} />
           </View>
-          <Text style={styles.label}>Gender</Text>
+          <Text style={styles.label}>Title</Text>
           <Controller
             control={control}
-            name="gender"
+            name="title"
             render={({ field: { onChange, value } }) => (
               <Dropdown
                 style={[
                   styles.dropdown,
-                  errors.gender && { borderColor: 'red' },
+                  errors.title && { borderColor: 'red' },
                 ]}
-                placeholder="Select Gender"
-                data={genderData}
+                placeholder="select Your Title"
+                data={TitleData}
                 value={value}
                 labelField="label"
                 valueField="value"
@@ -121,8 +118,8 @@ const Registration = () => {
               />
             )}
           />
-          {errors.gender && (
-            <Text style={styles.errorText}>{errors.gender.message}</Text>
+          {errors.title && (
+            <Text style={styles.errorText}>{errors.title.message}</Text>
           )}
           <FormInput
             label="First Name"
@@ -275,94 +272,4 @@ const Registration = () => {
   );
 };
 
-const FormInput = ({ label, control, name, error, keyboardType }: any) => (
-  <>
-    <Text style={styles.label}>{label}</Text>
-    <Controller
-      control={control}
-      name={name}
-      render={({ field: { onChange, onBlur, value } }) => (
-        <TextInput
-          style={[styles.input, error && { borderColor: 'red' }]}
-          placeholder={label}
-          placeholderTextColor="#999"
-          value={value}
-          onChangeText={onChange}
-          onBlur={onBlur}
-          keyboardType={keyboardType}
-        />
-      )}
-    />
-    {error && <Text style={styles.errorText}>{error}</Text>}
-  </>
-);
-
 export default Registration;
-
-const styles = StyleSheet.create({
-  container: { padding: 20, backgroundColor: '#F5F5F5' },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    justifyContent: 'space-between',
-  },
-
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '600',
-    textAlign: 'center',
-    flex: 1,
-  },
-
-  card: {
-    backgroundColor: '#fff',
-    padding: 25,
-    borderRadius: 15,
-    elevation: 5,
-  },
-  title: {
-    textAlign: 'center',
-    fontSize: 22,
-    fontWeight: '600',
-    marginBottom: 25,
-  },
-  label: { fontSize: 14, marginBottom: 5, fontWeight: '500' },
-  dropdown: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    height: 50,
-    paddingHorizontal: 10,
-    backgroundColor: '#fff',
-    marginBottom: 10,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    height: 50,
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    fontSize: 15,
-    backgroundColor: '#fff',
-    marginBottom: 5,
-  },
-  passwordWrapper: {
-    position: 'relative',
-    justifyContent: 'center',
-  },
-  eye: {
-    position: 'absolute',
-    right: 10,
-    top: '50%',
-    transform: [{ translateY: -12 }],
-  },
-  errorText: { color: 'red', fontSize: 13, marginBottom: 10 },
-  button: {
-    backgroundColor: '#F48C06',
-    paddingVertical: 15,
-    borderRadius: 8,
-    marginTop: 15,
-  },
-  buttonText: { color: '#fff', textAlign: 'center', fontSize: 18 },
-});

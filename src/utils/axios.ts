@@ -4,7 +4,8 @@ import Config from "react-native-config";
 
 // ⚠️ Localhost won't work in React Native emulator/phone
 // Replace with your machine IP if running locally, e.g.:
-const BASE_URL = " https://7c529f5eca79.ngrok-free.app/";
+// const BASE_URL = " https://7c529f5eca79.ngrok-free.app/";
+const BASE_URL ="http://192.168.0.106:3001"
 
 interface IFaceGlobalResponseType<T> {
   status: number;
@@ -86,6 +87,8 @@ export const postData = async <T>({
   abortSignal,
 }: IFacePostData<T>) => {
   const response = await axiosInstance.post(url, body, { signal: abortSignal });
+  console.log(url);
+  
   
   return {
     status: response.status,

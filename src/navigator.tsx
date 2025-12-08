@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 import ProfileScreen from './Pages/profileScreen';
 import HomeScreen from './Pages/Home1/homeScree1';
+import HomeStackNavigator from './HomeStackNavigator';
 
 // import SettingsScreen from './screens/SettingsScreen';
 // import ProfileScreen from './screens/ProfileScreen';
@@ -33,7 +34,7 @@ export default function App() {
           tabBarStyle: { paddingBottom: 5, height: 60 },
         })}
       >
-        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Home" component={HomeStackNavigator} />
         <Tab.Screen name="Profile" component={ProfileScreen} />
         {/* <Tab.Screen name="Settings" component={SettingsScreen} /> */}
       </Tab.Navigator>

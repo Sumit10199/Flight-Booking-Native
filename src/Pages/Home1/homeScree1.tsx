@@ -9,8 +9,8 @@ export default function HomeScreen() {
     <View 
     // style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
     >
-      {/* <FlightSearchForm/> */}
-      <Flight_List/>
+      <FlightSearchForm/>
+      {/* <Flight_List/> */}
     </View>
   );
 }

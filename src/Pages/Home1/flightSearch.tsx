@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,14 @@ import { endpoints } from '../../utils/endpoints';
 import { GlobalResponseType, postData } from '../../utils/axios';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { Dropdown } from 'react-native-element-dropdown';
+import AirportSelector from './AirportSelector';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { FlightPNR } from './types';
+import { useDispatch } from 'react-redux';
+import { travellerDetails } from '../../Store/BookingDetails/bookingDetails';
+import Toast from 'react-native-toast-message';
+import { useNavigation } from '@react-navigation/native';
 
 interface Travellers {
   adults: number;
@@ -30,11 +38,25 @@ export interface Response {
 type TravellerType = 'adults' | 'children' | 'infants';
 
 export default function FlightSearchForm() {
-  const [fromCity, setFromCity] = useState('');
-  const [toCity, setToCity] = useState('');
   const [departureDate, setDepartureDate] = useState('');
   const [showCalendar, setShowCalendar] = useState(false);
   const [showTravellerModal, setShowTravellerModal] = useState(false);
+  const [origin, setOrigin] = useState('');
+  const [destination, setDestination] = useState('');
+  const [loader, setLoader] = useState(false);
+  const dispatch = useDispatch();
+  const navigation = useNavigation<any>();
+  const [flightListData, setFlightListData] = useState<FlightPNR[]>([]);
+  const [flightListDataStore, setFlightListDataStore] = useState<FlightPNR[]>(
+    [],
+  );
+  const [airlines, setAirlines] = useState<
+    {
+      airline_name: string;
+      airline_code: string;
+      airline_logo: string;
+    }[]
+  >([]);
 
   const [travellers, setTravellers] = useState<Travellers>({
     adults: 1,
@@ -53,30 +75,125 @@ export default function FlightSearchForm() {
       [type]: Math.max(0, value),
     }));
   };
-
+  function formatPassengers(data: {
+    adults: number;
+    children: number;
+    infants: number;
+  }) {
+    return (
+      `${data.adults} Adult${data.adults !== 1 ? 's' : ''}, ` +
+      `${data.children} Children, ` +
+      `${data.infants} Infant${data.infants !== 1 ? 's' : ''}`
+    );
+  }
   const handleSearch = async () => {
-    console.log({
-      fromCity,
-      toCity,
-      departureDate,
-      travellers,
-    });
+    setLoader(true);
+    try {
+      const response: GlobalResponseType<Response> = await postData({
+        url: endpoints.GET_FLIGHT_LIST,
+        body: {
+          origin_apt: origin,
+          destin_apt: destination,
+          boarding_date: departureDate,
+          seats: formatPassengers({
+            adults: travellers?.adults,
+            children: travellers?.children,
+            infants: travellers?.infants,
+          }),
+          type: 'single',
+        },
+      });
+      if (response.status === 200 && response.data.status) {
+        await AsyncStorage.setItem(
+          'search_details',
+          JSON.stringify({
+            origin: origin,
+            destination: destination,
+            date: departureDate,
+            travel: formatPassengers({
+              adults: travellers?.adults,
+              children: travellers?.children,
+              infants: travellers?.infants,
+            }),
+          }),
+        );
+        const flightDetails = [
+          ...JSON.parse(response.data.result.innerFlights),
+          ...JSON.parse(response.data.result.AIR_IQ),
+          ...JSON.parse(response.data.result.EASE2FLY),
+          ...JSON.parse(response.data.result.TRAVELOGY),
+        ];
 
-    const response: GlobalResponseType<Response> = await postData({
-      url: endpoints.GET_FLIGHT_LIST,
-      body: {
-        origin_apt: fromCity,
-        destin_apt: toCity,
-        boarding_date: departureDate,
-        seats: travellers,
-        type: 'single',
-      },
-    });
-    if (response.status === 200 && response.data.status) {
-      console.log('response', response);
+        setFlightListData(
+          flightDetails.sort(
+            (a, b) =>
+              new Date(a.pnr_date).getTime() - new Date(b.pnr_date).getTime(),
+          ),
+        );
+        setFlightListDataStore(
+          flightDetails.sort(
+            (a, b) =>
+              new Date(a.pnr_date).getTime() - new Date(b.pnr_date).getTime(),
+          ),
+        );
+        dispatch(
+          travellerDetails(
+            formatPassengers({
+              adults: travellers?.adults,
+              children: travellers?.children,
+              infants: travellers?.infants,
+            }),
+          ),
+        );
+        console.log(flightListData);
+        
+        if (flightListData?.length>0) {           
+          navigation.navigate('Flight_List', {  flights: flightListData, airlines })
+        }
+
+      } else {
+        Toast.show({
+          text1: response.data.message,
+          type: 'error',
+          position: 'top',
+        });
+      }
+    } catch (error: any) {
+      Toast.show({
+        text1: error.response.data.message,
+        type: 'error',
+        position: 'top',
+      });
+    } finally {
+      setLoader(false);
     }
-    // Call your API or navigate to results
   };
+
+  const swapFields = () => {
+    const temp = origin;
+    setOrigin(destination);
+    setDestination(temp);
+  };
+
+  const getAirlines = async () => {
+    try {
+      const response: GlobalResponseType<{ status: boolean; result: any }> =
+        await postData({
+          url: endpoints.AIRLINE_GET,
+          body: {},
+        });
+
+      if (response.status === 200 && response.data.status) {
+        setAirlines(response.data.result);
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    getAirlines();
+  }, []);
 
   return (
     <ScrollView>
@@ -109,132 +226,86 @@ export default function FlightSearchForm() {
         </View>
 
         <View>
-          {/* Origin */}
-          <Text style={styles.sectionLabel}>Origin</Text>
-          <View style={styles.inputCard}>
-            <Image source={require("../../../assets/arrival.png")} />
-            <View style={styles.inputColumn}>
-              <TextInput
-                style={styles.inputTitle}
-                placeholder="Search for an airport..."
-                placeholderTextColor="#aaa"
-              />
-            </View>
-          </View>
+          <AirportSelector
+            label="Origin"
+            value={origin}
+            onChange={(v: any) => setOrigin(v)}
+            icon={require('../../../assets/arrival.png')}
+          />
           <View>
             <View style={styles.swapIconContainer}>
-              <Ionicons name="swap-vertical" size={22} color="#444" />
+              <TouchableOpacity onPress={swapFields}>
+                <Ionicons name="swap-vertical" size={22} color="#444" />
+              </TouchableOpacity>
             </View>
           </View>
-          <Text style={styles.sectionLabel}>Destination</Text>
-          <View style={styles.inputCard}>
-            <Image source={require("../../../assets/desc.png")} />
-            <View style={styles.inputColumn}>
-              <TextInput
-                style={styles.inputTitle}
-                placeholder="Search for an airport..."
-                placeholderTextColor="#aaa"
-              />
-            </View>
-          </View>
+
+          <AirportSelector
+            label="Destination"
+            value={destination}
+            onChange={(v: any) => setDestination(v)}
+            icon={require('../../../assets/desc.png')}
+          />
+
           <Text style={styles.sectionLabel}>Departure Date</Text>
           <View style={styles.inputCard}>
             <Ionicons name="calendar-outline" size={22} color="#444" />
-            <TextInput style={styles.dateInput} placeholder="DD/MM/YYYY"   value={departureDate}
-              editable={false} />
+            <TouchableOpacity onPress={() => setShowCalendar(!showCalendar)}>
+              <TextInput
+                style={styles.dateInput}
+                placeholder="DD/MM/YYYY"
+                value={departureDate}
+                editable={false}
+                placeholderTextColor={'black'}
+              />
+            </TouchableOpacity>
           </View>
+          {showCalendar && (
+            <CalendarList
+              onDayPress={handleDayPress}
+              pastScrollRange={0}
+              futureScrollRange={2}
+              horizontal
+              pagingEnabled
+              theme={{
+                todayTextColor: '#007AFF',
+                selectedDayBackgroundColor: '#007AFF',
+                selectedDayTextColor: 'white',
+                arrowColor: '#007AFF',
+              }}
+              markedDates={
+                departureDate
+                  ? {
+                      [departureDate]: {
+                        selected: true,
+                        selectedColor: '#007AFF',
+                      },
+                    }
+                  : {}
+              }
+            />
+          )}
           <Text style={styles.sectionLabel}>Traveller</Text>
           <View style={styles.inputCard}>
             <Ionicons name="airplane-outline" size={22} color="#444" />
-             <TouchableOpacity onPress={() => setShowTravellerModal(true)}>
-          <View pointerEvents="none" style={styles.inputColumn}>
-            <TextInput
-              style={styles.inputTitle}
-              placeholder="Travellers"
-              value={`${travellers.adults} Adult${
-                travellers.adults > 1 ? 's' : ''
-              }, ${travellers.children} Child${
-                travellers.children > 1 ? 'ren' : ''
-              }, ${travellers.infants} Infant${
-                travellers.infants > 1 ? 's' : ''
-              }`}
-              editable={false}
-            />
+            <TouchableOpacity onPress={() => setShowTravellerModal(true)}>
+              <View pointerEvents="none" style={styles.inputColumn}>
+                <TextInput
+                  style={styles.inputTitle}
+                  placeholder="Travellers"
+                  value={`${travellers.adults} Adult${
+                    travellers.adults > 1 ? 's' : ''
+                  }, ${travellers.children} Child${
+                    travellers.children > 1 ? 'ren' : ''
+                  }, ${travellers.infants} Infant${
+                    travellers.infants > 1 ? 's' : ''
+                  }`}
+                  editable={false}
+                />
+              </View>
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
-          </View>
-          <TouchableOpacity style={styles.searchButtonMain}>
-            <Text style={styles.searchButtonText}>Search</Text>
-          </TouchableOpacity>
         </View>
-        
-
-        {/* <TextInput
-          style={styles.input}
-          placeholder="From City"
-          value={fromCity}
-          onChangeText={setFromCity}
-        /> */}
-
-        {/* <TextInput
-          style={styles.input}
-          placeholder="To City"
-          value={toCity}
-          onChangeText={setToCity}
-        />
-
-        <TouchableOpacity onPress={() => setShowCalendar(!showCalendar)}>
-          <View pointerEvents="none">
-            <TextInput
-              style={styles.input}
-              placeholder="Select Departure Date"
-              value={departureDate}
-              editable={false}
-            />
-          </View>
-        </TouchableOpacity>
-
-        {showCalendar && (
-          <CalendarList
-            onDayPress={handleDayPress}
-            pastScrollRange={0}
-            futureScrollRange={2}
-            horizontal
-            pagingEnabled
-            theme={{
-              todayTextColor: '#007AFF',
-              selectedDayBackgroundColor: '#007AFF',
-              selectedDayTextColor: 'white',
-              arrowColor: '#007AFF',
-            }}
-            markedDates={
-              departureDate
-                ? {
-                    [departureDate]: {
-                      selected: true,
-                      selectedColor: '#007AFF',
-                    },
-                  }
-                : {}
-            }
-          />
-        )}
-        <TouchableOpacity onPress={() => setShowTravellerModal(true)}>
-          <View pointerEvents="none">
-            <TextInput
-              style={styles.input}
-              placeholder="Travellers"
-              value={`${travellers.adults} Adult${
-                travellers.adults > 1 ? 's' : ''
-              }, ${travellers.children} Child${
-                travellers.children > 1 ? 'ren' : ''
-              }, ${travellers.infants} Infant${
-                travellers.infants > 1 ? 's' : ''
-              }`}
-              editable={false}
-            />
-          </View>
-        </TouchableOpacity>
         <Modal
           transparent={true}
           visible={showTravellerModal}
@@ -284,9 +355,21 @@ export default function FlightSearchForm() {
             </View>
           </View>
         </Modal>
-        <TouchableOpacity style={styles.button} onPress={handleSearch}>
-          <Text style={styles.buttonText}>Search Flights</Text>
-        </TouchableOpacity> */}
+        <TouchableOpacity
+          style={styles.searchButtonMain}
+          onPress={handleSearch}
+          disabled={loader}
+        >
+          {loader ? (
+            <>
+              <Text style={styles.searchButtonText}>Loading...</Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.searchButtonText}>Search</Text>
+            </>
+          )}
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -469,10 +552,6 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     marginLeft: 5,
   },
-
-  /** ========================
-   *  INPUT CARD
-   ========================== */
   inputCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -510,9 +589,6 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
 
-  /** ========================
-   *  SWAP ICON (between origin & destination)
-   ========================== */
   swapIconContainer: {
     position: 'absolute',
     right: 15,
@@ -520,9 +596,6 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -12 }],
   },
 
-  /** ========================
-   * DATE INPUT
-   ========================== */
   dateInput: {
     fontSize: 16,
     fontWeight: '600',
@@ -530,9 +603,6 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
 
-  /** ========================
-   * MAIN SEARCH BUTTON
-   ========================== */
   searchButtonMain: {
     backgroundColor: '#F2994A',
     paddingVertical: 15,
@@ -546,5 +616,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '700',
     fontSize: 18,
+  },
+  dropdownStyle: {
+    paddingHorizontal: 10,
   },
 });

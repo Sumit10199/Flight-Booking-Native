@@ -5,6 +5,9 @@ import LoginScreen from './Pages/Login/login';
 import Registration from "./Pages/Registration/registration"
 import business_information from "./Pages/Registration/business_information"
 import { NavigationContainer } from '@react-navigation/native';
+import ForgetPasswordScreen from './Pages/ForgetPassword/forget_password';
+import ChangePasswordScreen from './Pages/ForgetPassword/ChangePasswordScreen';
+
 const Stack = createNativeStackNavigator();
 
 export function AuthStack() {
@@ -15,6 +18,8 @@ export function AuthStack() {
                 {/* <Stack.Screen name="Signup" component={SignupScreen} /> */}
                 <Stack.Screen name="Signup" component={Registration} />
                 <Stack.Screen name="business_information" component={business_information} />
+                <Stack.Screen name="ForgotPassword" component={ForgetPasswordScreen} />
+                <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
             </Stack.Navigator>
         </NavigationContainer>
 

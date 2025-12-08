@@ -47,6 +47,7 @@ export const styles = StyleSheet.create({
     fontSize: 15,
     backgroundColor: '#fff',
     marginBottom: 5,
+    color: '#000',
   },
   passwordWrapper: {
     position: 'relative',

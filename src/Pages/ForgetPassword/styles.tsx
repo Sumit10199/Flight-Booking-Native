@@ -1,0 +1,122 @@
+import { StyleSheet } from "react-native";
+
+export const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: "#FFFFFF" },
+  container: { flex: 1, paddingHorizontal: 24, paddingTop: 8 },
+
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    justifyContent: "space-between",
+  },
+  backBtn: { padding: 8, marginRight: 8 },
+  backArrow: { fontSize: 28, lineHeight: 28, color: "#111" },
+  title: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#111",
+  },
+
+  centerArea: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 18,
+  },
+  helper: {
+    textAlign: "center",
+    fontSize: 26,
+    color: "#444",
+    marginTop: 24,
+    marginBottom: 24,
+  },
+  inputWrap: { width: "100%" },
+  input: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: "#CFCFCF",
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    backgroundColor: "#fff",
+  },
+
+  button: {
+    width: "72%",
+    height: 48,
+    alignSelf: "center",
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#EA8B27",
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+    marginTop: 24,
+  },
+  buttonDisabled: { opacity: 0.6 },
+  buttonText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+
+  /* OTP Modal */
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+  },
+  modalClose: {
+    position: "absolute",
+    right: 12,
+    top: 8,
+    padding: 8,
+    zIndex: 2,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    textAlign: "center",
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  modalDesc: {
+    textAlign: "center",
+    color: "#444",
+    marginBottom: 12,
+  },
+  otpInput: {
+    borderWidth: 1,
+    borderColor: "#CFCFCF",
+    borderRadius: 10,
+    height: 50,
+    fontSize: 18,
+    letterSpacing: 6,
+    backgroundColor: "#fff",
+    marginTop: 8,
+    paddingHorizontal: 12,
+  },
+  resendBtn: {
+    marginTop: 16,
+    alignSelf: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: "#f1f1f1",
+  },
+  resendText: {
+    fontWeight: "600",
+    color: "#333",
+  },
+});

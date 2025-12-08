@@ -109,7 +109,7 @@ const Registration = () => {
                   styles.dropdown,
                   errors.title && { borderColor: 'red' },
                 ]}
-                placeholder="select Your Title"
+                placeholder="Select Your Title"
                 data={TitleData}
                 value={value}
                 labelField="label"

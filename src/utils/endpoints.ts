@@ -12,7 +12,7 @@ export const endpoints = {
    AVALIABLE_PNR_AIRPORT_CODE:"/agent/flight/getAvaliablePnrAirportcode",
    GET_TWO_MONTHS_AVALIABLE_PNR:"/agent/flight/getTwoMonthsofAvailablePNR",
    AGENT_FLIGHT_BOOKING_REQUEST:"/agent/booking/flighBookingRequest",
-   GET_AGENT_BOOKING_FLIGHT_LIST:"/agent/booking/getFlightBookingListOfAgent",
+   GET_AGENT_BOOKING_FLIGHT_LIST:"agent/booking/getFlightBookingListOfAgent",
    GET_AGENT_ACCOUNT_STATEMENT:"/agent/account/getAccountStatementOfAgent",
    GET_BANKINFO_LIST:"bank/getBankInfoList",
    AGET_CREATE_DEPOSITE:"/agent/deposit/createDeposit",

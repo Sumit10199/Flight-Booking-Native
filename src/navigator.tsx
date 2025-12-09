@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import ProfileScreen from './Pages/profileScreen';
 import HomeScreen from './Pages/Home1/homeScree1';
 import HomeStackNavigator from './HomeStackNavigator';
+import BookingScreen from "./Pages/MyBookings/MyBookings"
 
 // import SettingsScreen from './screens/SettingsScreen';
 // import ProfileScreen from './screens/ProfileScreen';
@@ -21,7 +22,12 @@ export default function App() {
 
             if (route.name === 'Home') {
               iconName = focused ? 'home' : 'home-outline';
-            } else if (route.name === 'Settings') {
+            } 
+            else if (route.name === 'Booking') {
+        iconName = focused ? 'document-text-outline' : 'document-text-outline';
+
+      }
+            else if (route.name === 'Settings') {
               iconName = focused ? 'settings' : 'settings-outline';
             } else if (route.name === 'Profile') {
               iconName = focused ? 'person' : 'person-outline';
@@ -35,6 +41,8 @@ export default function App() {
         })}
       >
         <Tab.Screen name="Home" component={HomeStackNavigator} />
+          <Tab.Screen name="Booking" component={BookingScreen} />
+
         <Tab.Screen name="Profile" component={ProfileScreen} />
         {/* <Tab.Screen name="Settings" component={SettingsScreen} /> */}
       </Tab.Navigator>

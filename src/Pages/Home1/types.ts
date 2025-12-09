@@ -192,3 +192,33 @@ export interface PaymentModule {
 }
 
 
+export interface User {
+  id: number;
+  portal_user_id: number | null;
+  agent_class: number;
+  initial: string;
+  first_name: string;
+  last_name: string;
+  company_name: string;
+  address: string;
+  country_id: string;
+  state: string;
+  city: string;
+  pincode: string;
+  email_id: string;
+  mobile_no: string;
+  password: string;
+  pan_name: string;
+  pan_no: string;
+  pan_attachment: string | null;
+  gst_no: string;
+  main_bal: number;
+  credit_avail: number;
+  credit_limit: number;
+  support_email: string;
+  support_number: string;
+  status: string;
+  is_deleted: string;
+  created_at: string;
+  updated_at: string;
+}

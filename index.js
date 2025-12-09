@@ -10,12 +10,14 @@ import RootNavigator from './src/rootNavigator'; // your main navigator
 import { Store, persistor } from './src/Store/Store'; // adjust path if needed
 import { NavigationContainer } from '@react-navigation/native';
 import { AuthProvider } from './src/authContext';
+import Toast from 'react-native-toast-message';
 
 const Root = () => (
   <Provider store={Store}>
     <PersistGate loading={null} persistor={persistor}>
         <AuthProvider>
           <RootNavigator />
+          <Toast />
         </AuthProvider>
       {/* </NavigationContainer> */}
     </PersistGate>

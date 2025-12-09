@@ -31,9 +31,12 @@ import { GlobalResponseType, postData } from '../../../utils/axios';
 import { endpoints } from '../../../utils/endpoints';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Dropdown } from 'react-native-element-dropdown';
+import Toast from 'react-native-toast-message';
+import { useNavigation } from '@react-navigation/native';
 
 function BookingTicket() {
   const [loader, setLoader] = useState(false);
+  const navigation=useNavigation<any>()
   const [paymentModule, setPaymentModule] = useState<PaymentModule[]>([]);
   const [toggle, setToggle] = useState<boolean>();
   const [airlines, setAirlines] = useState<
@@ -107,6 +110,8 @@ function BookingTicket() {
     setValue,
     watch,
     control,
+    reset,
+    getValues,
   } = useForm<FormValues>({
     defaultValues: {
       passengers: initialPassengers,
@@ -188,11 +193,35 @@ function BookingTicket() {
             );
             return;
           }
+          if (checkoutUrl) {
+            Linking.openURL(checkoutUrl);
+          } else {
+            console.warn('checkoutUrl is undefined');
+          }
+        } else {
+          AsyncStorage.removeItem('booking_flight');
+          AsyncStorage.removeItem('traveller');
+          navigation.navigate("Booking")
+          Toast.show({
+          type: 'success',
+          text2: response?.data?.message,
+        });
+
         }
+        
       } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: response?.data?.message,
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      Toast.show({
+        type: 'error',
+        text2: 'Server Error (500): Something went wrong.',
+      });
     } finally {
       setLoader(false);
     }
@@ -207,7 +236,7 @@ function BookingTicket() {
         url: endpoints.GENERATE_PHONEPE_URL,
         body: { amount, book_id: booking_id },
       });
-      if (response.status === 200 && response.data.status) {
+      if (response.status === 200 && response.data.status) {        
         return response.data.url.redirectUrl;
       }
     } catch (error) {
@@ -342,13 +371,45 @@ function BookingTicket() {
     }
   }, [seatsStringRaw, flightDetails, displayPrice, setValue, watch]);
 
+  useEffect(() => {
+    if (!initialPassengers || initialPassengers.length === 0) return;
+
+    const current = getValues();
+    const merged = initialPassengers.map((p, i) => {
+      const existing = current.passengers?.[i] ?? {};
+      return {
+        type: existing.type ?? p.type,
+        title: existing.title ?? p.title,
+        firstName: existing.firstName ?? p.firstName ?? '',
+        lastName: existing.lastName ?? p.lastName ?? '',
+        dob: existing.dob ?? p.dob ?? '',
+        passportNo: existing.passportNo ?? p.passportNo ?? '',
+        needWheelchair: existing.needWheelchair ?? p.needWheelchair ?? 'NO',
+        passport_expirydate:
+          existing.passport_expirydate ?? p.passport_expirydate ?? '',
+        passport_issuing_country_code:
+          existing.passport_issuing_country_code ??
+          p.passport_issuing_country_code ??
+          '',
+        nationality: existing.nationality ?? p.nationality ?? '',
+      } as Passenger;
+    });
+
+    reset({
+      ...current,
+      passengers: merged,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPassengers]);
+
   return (
     <ScrollView style={styles.container}>
-      {/* <View style={styles.card}>
+      <View style={styles.card}>
         <Text style={styles.routeTitle}>
           {firstSeg?.origin} - {lastSeg?.destination}{' '}
           {firstSeg ? dayjs(firstSeg.depDate).format('ddd, DD MMM, YYYY') : ''}
         </Text>
+
         <View style={styles.rowBetween}>
           <Text style={styles.onwardText}>✈ Onward</Text>
 
@@ -359,138 +420,49 @@ function BookingTicket() {
             <Text style={styles.fareTypeText}>{flightDetails?.fare_type}</Text>
           </View>
         </View>
-         <View style={styles.airlineLogoBox}>
-              <Image
-                source={{ uri: firstSeg?.airline_logo }}
-                style={styles.airlineLogo}
-              />
-            </View>
-       <View>
-         <View style={styles.airlineRow}>
-          <View style={styles.row}>
-           
-
-            <Text style={styles.airlineName}>
-              {firstSeg?.airline_name}
-              {'\n'}
-              {firstSeg?.flightNo}
-            </Text>
-          </View>
-
-          <View style={styles.segmentRow}>
-           <View style={{ alignItems: 'flex-start' }}>
-              <Text>
-                {dayjs(firstSeg?.depDate).format('ddd, DD MMM, YYYY')}
-              </Text>
-              <Text>
-                {firstSeg?.origin} {firstSeg?.depTime}
-              </Text>
-              <Text>Terminal- {'N/A'}</Text>
-            </View>
-
-            <View style={{ alignItems: 'center' }}>
-              <Text>Non - Stop</Text>
-              <Text style={{ fontSize: 26 }}>✈</Text>
-            </View>
-
-            <View style={{ alignItems: 'flex-end' }}>
-              <Text>{dayjs(lastSeg?.arrDate).format('ddd, DD MMM, YYYY')}</Text>
-              <Text>
-                {lastSeg?.destination} {lastSeg?.arrTime}
-              </Text>
-              <Text>Terminal- {'N/A'}</Text>
-            </View>
+        <View style={styles.airlineRow}>
+          <Image
+            source={{ uri: firstSeg?.airline_logo }}
+            style={styles.airlineLogo}
+          />
+          <View style={{ marginLeft: 12 }}>
+            <Text style={styles.airlineName}>{firstSeg?.airline_name}</Text>
+            <Text style={styles.flightNo}>{firstSeg?.flightNo}</Text>
           </View>
         </View>
-       </View>
+        <View style={styles.segmentContainer}>
+          <View style={{ alignItems: 'flex-start' }}>
+            <Text style={styles.dateText}>
+              {dayjs(firstSeg?.depDate).format('ddd, DD MMM, YYYY')}
+            </Text>
+            <Text style={styles.timeText}>
+              {firstSeg?.origin} {firstSeg?.depTime}
+            </Text>
+            <Text style={styles.terminalText}>Terminal- N/A</Text>
+          </View>
+
+          <View style={styles.centerBox}>
+            <Text style={styles.nonStopText}>Non - Stop</Text>
+            <Text style={styles.planeIcon}>✈</Text>
+          </View>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={styles.dateText}>
+              {dayjs(lastSeg?.arrDate).format('ddd, DD MMM, YYYY')}
+            </Text>
+            <Text style={styles.timeText}>
+              {lastSeg?.destination} {lastSeg?.arrTime}
+            </Text>
+            <Text style={styles.terminalText}>Terminal- N/A</Text>
+          </View>
+        </View>
+
         <TouchableOpacity
           onPress={() => setToggle(!toggle)}
           style={styles.toggleButton}
         >
           <Text style={styles.toggleButtonText}>Flight Details</Text>
         </TouchableOpacity>
-      </View> */}
-      <View style={styles.card}>
-
-  {/* Route Title */}
-  <Text style={styles.routeTitle}>
-    {firstSeg?.origin} - {lastSeg?.destination}{' '}
-    {firstSeg ? dayjs(firstSeg.depDate).format('ddd, DD MMM, YYYY') : ''}
-  </Text>
-
-  {/* Onward + Fare Rules */}
-  <View style={styles.rowBetween}>
-    <Text style={styles.onwardText}>✈ Onward</Text>
-
-    <View style={{ alignItems: 'flex-end' }}>
-      {flightDetails?.fare_type && (
-        <Text style={styles.fareRuleLink}>Fare Rules</Text>
-      )}
-      <Text style={styles.fareTypeText}>{flightDetails?.fare_type}</Text>
-    </View>
-  </View>
-
-  {/* Airline Row */}
-  <View style={styles.airlineRow}>
-
-    {/* Airline Logo */}
-    <Image
-      source={{ uri: firstSeg?.airline_logo }}
-      style={styles.airlineLogo}
-    />
-
-    {/* Airline Name + Number */}
-    <View style={{ marginLeft: 12 }}>
-      <Text style={styles.airlineName}>
-        {firstSeg?.airline_name}
-      </Text>
-      <Text style={styles.flightNo}>{firstSeg?.flightNo}</Text>
-    </View>
-
-  </View>
-
-  {/* FULL MIDDLE ROW */}
-  <View style={styles.segmentContainer}>
-
-    {/* LEFT — Origin */}
-    <View style={{ alignItems: 'flex-start' }}>
-      <Text style={styles.dateText}>
-        {dayjs(firstSeg?.depDate).format('ddd, DD MMM, YYYY')}
-      </Text>
-      <Text style={styles.timeText}>
-        {firstSeg?.origin} {firstSeg?.depTime}
-      </Text>
-      <Text style={styles.terminalText}>Terminal- N/A</Text>
-    </View>
-
-    {/* CENTER — Icon */}
-    <View style={styles.centerBox}>
-      <Text style={styles.nonStopText}>Non - Stop</Text>
-      <Text style={styles.planeIcon}>✈</Text>
-    </View>
-
-    {/* RIGHT — Destination */}
-    <View style={{ alignItems: 'flex-end' }}>
-      <Text style={styles.dateText}>
-        {dayjs(lastSeg?.arrDate).format('ddd, DD MMM, YYYY')}
-      </Text>
-      <Text style={styles.timeText}>
-        {lastSeg?.destination} {lastSeg?.arrTime}
-      </Text>
-      <Text style={styles.terminalText}>Terminal- N/A</Text>
-    </View>
-
-  </View>
-
-  {/* Flight Details Button */}
-  <TouchableOpacity
-    onPress={() => setToggle(!toggle)}
-    style={styles.toggleButton}
-  >
-    <Text style={styles.toggleButtonText}>Flight Details</Text>
-  </TouchableOpacity>
-
-</View>
+      </View>
 
       {toggle && (
         <View style={styles.card}>
@@ -597,6 +569,23 @@ function BookingTicket() {
                     key={`${type}-${relIndex}`}
                     style={{ marginBottom: 15 }}
                   >
+                    <Controller
+                      control={control}
+                      name={`passengers.${index}.type`}
+                      defaultValue={type}
+                      render={({ field }) => (
+                        <View style={{ display: 'none' }} />
+                      )}
+                    />
+
+                    <Controller
+                      control={control}
+                      name={`passengers.${index}.title`}
+                      render={({ field }) => (
+                        <View style={{ display: 'none' }} />
+                      )}
+                    />
+
                     <Controller
                       control={control}
                       name={`passengers.${index}.title`}
@@ -1070,7 +1059,7 @@ export default BookingTicket;
 
 export const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f3f4f6', padding: 12 },
- 
+
   airlineLogoBox: {
     padding: 6,
     borderWidth: 2,
@@ -1190,7 +1179,6 @@ export const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
 
-
   cityText: {
     fontSize: 13,
     fontWeight: '600',
@@ -1234,7 +1222,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
   },
-    card: {
+  card: {
     backgroundColor: '#fff',
     padding: 14,
     borderRadius: 10,
@@ -1349,5 +1337,4 @@ export const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-
 });

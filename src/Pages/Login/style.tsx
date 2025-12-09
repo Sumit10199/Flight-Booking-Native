@@ -1,5 +1,7 @@
 import { StyleSheet } from 'react-native';
 
+import * as yup from 'yup';
+import { regex } from '../Registration/types';
 
 export const styles = StyleSheet.create({
   screen: {
@@ -95,4 +97,28 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+});
+
+export interface Input{
+ email:string;
+password:string
+}
+
+export const schema = yup.object({
+  email: yup
+    .string()
+    .required('Email is required')
+    .trim()
+    .matches(
+      /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/,
+      'Invalid email',
+    ),
+  password: yup
+    .string()
+    .required('Password is required')
+    .min(8, 'At least 8 characters long')
+    .matches(
+      regex.PASSWORD,
+      'Password must contain a mix of lowercase & uppercase characters, a number and at least one special character (@$!%*#?&)',
+    ),
 });

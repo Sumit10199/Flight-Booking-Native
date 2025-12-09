@@ -7,21 +7,23 @@ import {
   StyleSheet,
   ScrollView,
   Modal,
-  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { CalendarList } from 'react-native-calendars';
 import { endpoints } from '../../utils/endpoints';
 import { GlobalResponseType, postData } from '../../utils/axios';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { Dropdown } from 'react-native-element-dropdown';
 import AirportSelector from './AirportSelector';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { FlightPNR } from './types';
+import { FlightPNR, User } from './types';
 import { useDispatch } from 'react-redux';
 import { travellerDetails } from '../../Store/BookingDetails/bookingDetails';
 import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
+
+import { useForm, Controller } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as Yup from 'yup';
 
 interface Travellers {
   adults: number;
@@ -35,145 +37,83 @@ export interface Response {
   result: any;
 }
 
-type TravellerType = 'adults' | 'children' | 'infants';
+interface Airline {
+  airline_name: string;
+  airline_code: string;
+  airline_logo: string;
+}
+
+type FormValues = {
+  origin: string;
+  destination: string;
+  departureDate: string;
+  travellers: Travellers;
+};
+
+const flightSchema = Yup.object().shape({
+  origin: Yup.string()
+    .required('Origin is required')
+    .min(3, 'Enter valid airport code'),
+  destination: Yup.string()
+    .required('Destination is required')
+    .min(3, 'Enter valid airport code')
+    .test(
+      'not-same',
+      'Origin and destination cannot be same',
+      function (value) {
+        const { origin } = this.parent;
+        return origin !== value;
+      },
+    ),
+  departureDate: Yup.string().required('Select a departure date'),
+  travellers: Yup.object({
+    adults: Yup.number().min(1, 'At least 1 adult').required(),
+    children: Yup.number().min(0).required(),
+    infants: Yup.number().min(0).required(),
+  }),
+});
 
 export default function FlightSearchForm() {
-  const [departureDate, setDepartureDate] = useState('');
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [showTravellerModal, setShowTravellerModal] = useState(false);
-  const [origin, setOrigin] = useState('');
-  const [destination, setDestination] = useState('');
-  const [loader, setLoader] = useState(false);
   const dispatch = useDispatch();
   const navigation = useNavigation<any>();
-  const [flightListData, setFlightListData] = useState<FlightPNR[]>([]);
-  const [flightListDataStore, setFlightListDataStore] = useState<FlightPNR[]>(
-    [],
-  );
-  const [airlines, setAirlines] = useState<
-    {
-      airline_name: string;
-      airline_code: string;
-      airline_logo: string;
-    }[]
-  >([]);
+  const [loader, setLoader] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [showTravellerModal, setShowTravellerModal] = useState(false);
+  const [airlines, setAirlines] = useState<Airline[]>([]);
+  const [agentData, setAgentData] = useState<any>(null);
+  const [user, setUser] = useState<User>()
+  
 
-  const [travellers, setTravellers] = useState<Travellers>({
-    adults: 1,
-    children: 0,
-    infants: 0,
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    getValues,
+    watch,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: yupResolver(flightSchema),
+    defaultValues: {
+      origin: '',
+      destination: '',
+      departureDate: '',
+      travellers: {
+        adults: 1,
+        children: 0,
+        infants: 0,
+      },
+    },
   });
 
-  const handleDayPress = (day: any) => {
-    setDepartureDate(day.dateString);
-    setShowCalendar(false);
-  };
+  const watchedDepartureDate = watch('departureDate');
 
-  const handleTravellerChange = (type: TravellerType, value: number) => {
-    setTravellers(prev => ({
-      ...prev,
-      [type]: Math.max(0, value),
-    }));
-  };
-  function formatPassengers(data: {
-    adults: number;
-    children: number;
-    infants: number;
-  }) {
+  function formatPassengers(data: Travellers) {
     return (
       `${data.adults} Adult${data.adults !== 1 ? 's' : ''}, ` +
       `${data.children} Children, ` +
       `${data.infants} Infant${data.infants !== 1 ? 's' : ''}`
     );
   }
-  const handleSearch = async () => {
-    setLoader(true);
-    try {
-      const response: GlobalResponseType<Response> = await postData({
-        url: endpoints.GET_FLIGHT_LIST,
-        body: {
-          origin_apt: origin,
-          destin_apt: destination,
-          boarding_date: departureDate,
-          seats: formatPassengers({
-            adults: travellers?.adults,
-            children: travellers?.children,
-            infants: travellers?.infants,
-          }),
-          type: 'single',
-        },
-      });
-      if (response.status === 200 && response.data.status) {
-        await AsyncStorage.setItem(
-          'search_details',
-          JSON.stringify({
-            origin: origin,
-            destination: destination,
-            date: departureDate,
-            travel: formatPassengers({
-              adults: travellers?.adults,
-              children: travellers?.children,
-              infants: travellers?.infants,
-            }),
-          }),
-        );
-        const flightDetails = [
-          ...JSON.parse(response.data.result.innerFlights),
-          ...JSON.parse(response.data.result.AIR_IQ),
-          ...JSON.parse(response.data.result.EASE2FLY),
-          ...JSON.parse(response.data.result.TRAVELOGY),
-        ];
-
-        setFlightListData(
-          flightDetails.sort(
-            (a, b) =>
-              new Date(a.pnr_date).getTime() - new Date(b.pnr_date).getTime(),
-          ),
-        );
-        setFlightListDataStore(
-          flightDetails.sort(
-            (a, b) =>
-              new Date(a.pnr_date).getTime() - new Date(b.pnr_date).getTime(),
-          ),
-        );
-        dispatch(
-          travellerDetails(
-            formatPassengers({
-              adults: travellers?.adults,
-              children: travellers?.children,
-              infants: travellers?.infants,
-            }),
-          ),
-        );
-        console.log(flightListData);
-        
-        if (flightListData?.length>0) {           
-          navigation.navigate('Flight_List', {  flights: flightListData, airlines })
-        }
-
-      } else {
-        Toast.show({
-          text1: response.data.message,
-          type: 'error',
-          position: 'top',
-        });
-      }
-    } catch (error: any) {
-      Toast.show({
-        text1: error.response.data.message,
-        type: 'error',
-        position: 'top',
-      });
-    } finally {
-      setLoader(false);
-    }
-  };
-
-  const swapFields = () => {
-    const temp = origin;
-    setOrigin(destination);
-    setDestination(temp);
-  };
 
   const getAirlines = async () => {
     try {
@@ -186,52 +126,196 @@ export default function FlightSearchForm() {
       if (response.status === 200 && response.data.status) {
         setAirlines(response.data.result);
       }
-    } catch (error) {
-      throw error;
+    } catch (err) {
+      console.warn('Failed to load airlines', err);
     }
   };
 
+  const handleDayPress = (day: any) => {
+    setValue('departureDate', day.dateString);
+    setShowCalendar(false);
+  };
+
+  const handleTravellerChange = (type: keyof Travellers, value: number) => {
+    const current = getValues('travellers');
+    const next = {
+      ...current,
+      [type]: Math.max(0, value),
+    };
+    if (type === 'adults' && next.adults < 1) next.adults = 1;
+    setValue('travellers', next);
+  };
+
+  const swapFields = () => {
+    const o = getValues('origin');
+    const d = getValues('destination');
+    setValue('origin', d);
+    setValue('destination', o);
+  };
+
+  const onSubmit = async (values: FormValues) => {
+    setLoader(true);
+    try {
+      const seats = formatPassengers(values.travellers);
+
+      const body = {
+        origin_apt: values.origin,
+        destin_apt: values.destination,
+        boarding_date: values.departureDate,
+        seats: seats,
+        type: 'single',
+      };
+
+      const response: GlobalResponseType<Response> = await postData({
+        url: endpoints.GET_FLIGHT_LIST,
+        body,
+      });
+
+      if (response.status === 200 && response.data.status) {
+        await AsyncStorage.setItem(
+          'search_details',
+          JSON.stringify({
+            origin: values.origin,
+            destination: values.destination,
+            date: values.departureDate,
+            travel: seats,
+          }),
+        );
+
+        const innerFlights = response.data.result?.innerFlights
+          ? JSON.parse(response.data.result.innerFlights)
+          : [];
+        const airIq = response.data.result?.AIR_IQ
+          ? JSON.parse(response.data.result.AIR_IQ)
+          : [];
+        const ease2fly = response.data.result?.EASE2FLY
+          ? JSON.parse(response.data.result.EASE2FLY)
+          : [];
+        const travelogy = response.data.result?.TRAVELOGY
+          ? JSON.parse(response.data.result.TRAVELOGY)
+          : [];
+
+        const flightDetails: FlightPNR[] = [
+          ...innerFlights,
+          ...airIq,
+          ...ease2fly,
+          ...travelogy,
+        ];
+
+        const sorted = flightDetails.sort(
+          (a: any, b: any) =>
+            new Date(a.pnr_date).getTime() - new Date(b.pnr_date).getTime(),
+        );
+
+        dispatch(travellerDetails(seats));
+        if (sorted && sorted.length > 0) {
+          navigation.navigate('Flight_List', { flights: sorted, airlines });
+        } else {
+          Toast.show({
+            text1: 'No flights found for selected route/date',
+            type: 'info',
+            position: 'top',
+          });
+        }
+      } else {
+        Toast.show({
+          text1: response.data.message || 'Failed to fetch flights',
+          type: 'error',
+          position: 'top',
+        });
+      }
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Something went wrong while fetching flights';
+      Toast.show({
+        text1: msg,
+        type: 'error',
+        position: 'top',
+      });
+    } finally {
+      setLoader(false);
+    }
+  };
+
+   const fetchAgentDetails = async (id: number) => {
+    try {
+      const response: GlobalResponseType<{
+        status: boolean;
+        data: any;
+      }> = await postData({
+        url: endpoints.GET_AGENT_DETAILS_BY_ID,
+        body: {
+          agent_id: id,
+        },
+      });
+
+      if (response?.status === 200 && response?.data?.status) {
+        setUser(response?.data?.data)
+        
+      }
+    } catch (error) {
+      console.error("Error fetching agent details:", error);
+    }
+  };
+
+
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        const userDataStr = await AsyncStorage.getItem('userData');
+        if (userDataStr) {
+          setAgentData(JSON.parse(userDataStr));
+        }
+      } catch (error) {
+        console.error('Error loading data from AsyncStorage:', error);
+      }
+    };
+    loadData();
     getAirlines();
+    if (agentData?.id) {
+      fetchAgentDetails(agentData?.id);
+    }
   }, []);
 
+
+
   return (
-    <ScrollView>
+    <View>
       <View style={styles.headerContainer}>
         <Text style={styles.headerTitle}>SMT Travel Agency</Text>
       </View>
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+        <View style={styles.container}>
+          <View style={styles.row_design}>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Main Balance</Text>
+              <Text style={styles.cardAmount}>INR {user?.main_bal}</Text>
+            </View>
 
-      <View style={styles.container}>
-        <View style={styles.row_design}>
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Main Balance</Text>
-            <Text style={styles.cardAmount}>INR 4,523</Text>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Credit Limit</Text>
+              <Text style={styles.cardAmount}>INR {user?.credit_limit}</Text>
+            </View>
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Credit Limit</Text>
-            <Text style={styles.cardAmount}>INR 4,523</Text>
-          </View>
-        </View>
-        <View style={styles.searchRow}>
-          <TouchableOpacity style={styles.searchButton}>
-            <Text style={styles.searchText}>Search</Text>
-          </TouchableOpacity>
-
-          <TextInput
-            placeholder="Search by code"
-            style={styles.searchInput}
-            placeholderTextColor="#888"
+          <Controller
+            control={control}
+            name="origin"
+            render={({ field: { value, onChange } }) => (
+              <AirportSelector
+                label="Origin"
+                value={value}
+                onChange={onChange}
+                icon={require('../../../assets/arrival.png')}
+              />
+            )}
           />
-        </View>
+          {errors.origin && (
+            <Text style={styles.error}>{errors.origin.message}</Text>
+          )}
 
-        <View>
-          <AirportSelector
-            label="Origin"
-            value={origin}
-            onChange={(v: any) => setOrigin(v)}
-            icon={require('../../../assets/arrival.png')}
-          />
           <View>
             <View style={styles.swapIconContainer}>
               <TouchableOpacity onPress={swapFields}>
@@ -240,26 +324,44 @@ export default function FlightSearchForm() {
             </View>
           </View>
 
-          <AirportSelector
-            label="Destination"
-            value={destination}
-            onChange={(v: any) => setDestination(v)}
-            icon={require('../../../assets/desc.png')}
+          <Controller
+            control={control}
+            name="destination"
+            render={({ field: { value, onChange } }) => (
+              <AirportSelector
+                label="Destination"
+                value={value}
+                onChange={onChange}
+                icon={require('../../../assets/desc.png')}
+              />
+            )}
           />
-
+          {errors.destination && (
+            <Text style={styles.error}>{errors.destination.message}</Text>
+          )}
           <Text style={styles.sectionLabel}>Departure Date</Text>
           <View style={styles.inputCard}>
             <Ionicons name="calendar-outline" size={22} color="#444" />
-            <TouchableOpacity onPress={() => setShowCalendar(!showCalendar)}>
-              <TextInput
-                style={styles.dateInput}
-                placeholder="DD/MM/YYYY"
-                value={departureDate}
-                editable={false}
-                placeholderTextColor={'black'}
+            <TouchableOpacity
+              onPress={() => setShowCalendar(!showCalendar)}
+              style={{ flex: 1 }}
+            >
+              <Controller
+                control={control}
+                name="departureDate"
+                render={({ field: { value } }) => (
+                  <TextInput
+                    style={styles.dateInput}
+                    placeholder="DD/MM/YYYY"
+                    value={value}
+                    editable={false}
+                    placeholderTextColor={'black'}
+                  />
+                )}
               />
             </TouchableOpacity>
           </View>
+
           {showCalendar && (
             <CalendarList
               onDayPress={handleDayPress}
@@ -274,9 +376,9 @@ export default function FlightSearchForm() {
                 arrowColor: '#007AFF',
               }}
               markedDates={
-                departureDate
+                watchedDepartureDate
                   ? {
-                      [departureDate]: {
+                      [watchedDepartureDate]: {
                         selected: true,
                         selectedColor: '#007AFF',
                       },
@@ -285,100 +387,120 @@ export default function FlightSearchForm() {
               }
             />
           )}
+          {errors.departureDate && (
+            <Text style={styles.error}>{errors.departureDate.message}</Text>
+          )}
           <Text style={styles.sectionLabel}>Traveller</Text>
           <View style={styles.inputCard}>
             <Ionicons name="airplane-outline" size={22} color="#444" />
-            <TouchableOpacity onPress={() => setShowTravellerModal(true)}>
-              <View pointerEvents="none" style={styles.inputColumn}>
-                <TextInput
-                  style={styles.inputTitle}
-                  placeholder="Travellers"
-                  value={`${travellers.adults} Adult${
-                    travellers.adults > 1 ? 's' : ''
-                  }, ${travellers.children} Child${
-                    travellers.children > 1 ? 'ren' : ''
-                  }, ${travellers.infants} Infant${
-                    travellers.infants > 1 ? 's' : ''
-                  }`}
-                  editable={false}
-                />
-              </View>
+            <TouchableOpacity
+              onPress={() => setShowTravellerModal(true)}
+              style={{ flex: 1 }}
+            >
+              <Controller
+                control={control}
+                name="travellers"
+                render={({ field: { value } }) => (
+                  <View pointerEvents="none" style={styles.inputColumn}>
+                    <TextInput
+                      style={styles.inputTitle}
+                      placeholder="Travellers"
+                      value={`${value.adults} Adult${
+                        value.adults > 1 ? 's' : ''
+                      }, ${value.children} Child${
+                        value.children > 1 ? 'ren' : ''
+                      }, ${value.infants} Infant${
+                        value.infants > 1 ? 's' : ''
+                      }`}
+                      editable={false}
+                    />
+                  </View>
+                )}
+              />
             </TouchableOpacity>
           </View>
-        </View>
-        <Modal
-          transparent={true}
-          visible={showTravellerModal}
-          animationType="slide"
-          onRequestClose={() => setShowTravellerModal(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Select Travellers</Text>
+          <Modal
+            transparent={true}
+            visible={showTravellerModal}
+            animationType="slide"
+            onRequestClose={() => setShowTravellerModal(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Select Travellers</Text>
 
-              {(['adults', 'children', 'infants'] as const).map(type => (
-                <View style={styles.row} key={type}>
-                  <Text style={styles.label}>
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </Text>
-                  <View style={styles.counter}>
-                    <TouchableOpacity
-                      onPress={() =>
-                        handleTravellerChange(
-                          type,
-                          Number(travellers[type]) - 1,
-                        )
-                      }
-                      style={styles.counterButton}
-                    >
-                      <Text style={styles.counterText}>-</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.count}>{travellers[type]}</Text>
-                    <TouchableOpacity
-                      onPress={() =>
-                        handleTravellerChange(type, travellers[type] + 1)
-                      }
-                      style={styles.counterButton}
-                    >
-                      <Text style={styles.counterText}>+</Text>
-                    </TouchableOpacity>
+                {(
+                  ['adults', 'children', 'infants'] as (keyof Travellers)[]
+                ).map(type => (
+                  <View style={styles.row} key={type}>
+                    <Text style={styles.label}>
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </Text>
+
+                    <View style={styles.counter}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          const current = getValues('travellers');
+                          handleTravellerChange(
+                            type,
+                            Number(current[type]) - 1,
+                          );
+                        }}
+                        style={styles.counterButton}
+                      >
+                        <Text style={styles.counterText}>-</Text>
+                      </TouchableOpacity>
+
+                      <Text style={styles.count}>
+                        {getValues('travellers')[type]}
+                      </Text>
+
+                      <TouchableOpacity
+                        onPress={() => {
+                          const current = getValues('travellers');
+                          handleTravellerChange(
+                            type,
+                            Number(current[type]) + 1,
+                          );
+                        }}
+                        style={styles.counterButton}
+                      >
+                        <Text style={styles.counterText}>+</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                </View>
-              ))}
+                ))}
 
-              <TouchableOpacity
-                style={styles.doneButton}
-                onPress={() => setShowTravellerModal(false)}
-              >
-                <Text style={styles.doneText}>Done</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.doneButton}
+                  onPress={() => setShowTravellerModal(false)}
+                >
+                  <Text style={styles.doneText}>Done</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        </Modal>
-        <TouchableOpacity
-          style={styles.searchButtonMain}
-          onPress={handleSearch}
-          disabled={loader}
-        >
-          {loader ? (
-            <>
-              <Text style={styles.searchButtonText}>Loading...</Text>
-            </>
-          ) : (
-            <>
+          </Modal>
+
+          <TouchableOpacity
+            style={styles.searchButtonMain}
+            onPress={handleSubmit(onSubmit)}
+            disabled={loader}
+          >
+            {loader ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
               <Text style={styles.searchButtonText}>Search</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    // backgroundColor: '#fff',
     flexGrow: 1,
     margin: 20,
   },
@@ -475,7 +597,6 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    marginBottom: 20,
   },
 
   headerTitle: {
@@ -488,6 +609,7 @@ const styles = StyleSheet.create({
   row_design: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: 20,
   },
 
   card: {
@@ -609,6 +731,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 20,
     width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   searchButtonText: {
@@ -619,5 +743,10 @@ const styles = StyleSheet.create({
   },
   dropdownStyle: {
     paddingHorizontal: 10,
+  },
+  error: {
+    color: 'red',
+    marginBottom: 8,
+    marginLeft: 6,
   },
 });

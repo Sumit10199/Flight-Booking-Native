@@ -274,10 +274,15 @@ export default function FlightSearchForm() {
     };
     loadData();
     getAirlines();
-    if (agentData?.id) {
+   
+  }, []);
+
+  useEffect(()=>{
+     if (agentData?.id) {
       fetchAgentDetails(agentData?.id);
     }
-  }, []);
+  },[agentData?.id])
+  
 
 
 

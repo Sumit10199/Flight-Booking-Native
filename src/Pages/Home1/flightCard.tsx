@@ -23,9 +23,14 @@ interface FlightCardProps {
   }[];
 }
 
-const FlightCard: React.FC<FlightCardProps> = ({ flightListData, airlines }) => {
+const FlightCard: React.FC<FlightCardProps> = ({
+  flightListData,
+  airlines,
+}) => {
   const [toggle, setToggle] = useState<Record<number, boolean>>({});
-  const [currentFareIndex, setCurrentFareIndex] = useState<{ [key: number]: number }>({});
+  const [currentFareIndex, setCurrentFareIndex] = useState<{
+    [key: number]: number;
+  }>({});
   const dispatch = useDispatch();
   const navigation = useNavigation<any>();
 
@@ -39,8 +44,16 @@ const FlightCard: React.FC<FlightCardProps> = ({ flightListData, airlines }) => 
     }
   }, [flightListData]);
 
-  const renderFlight = ({ item, index }: { item: FlightPNR; index: number }) => {
-    const logoData = airlines?.find(a => a.airline_code === item.segments[0]?.airline_code);
+  const renderFlight = ({
+    item,
+    index,
+  }: {
+    item: FlightPNR;
+    index: number;
+  }) => {
+    const logoData = airlines?.find(
+      a => a.airline_code === item.segments[0]?.airline_code,
+    );
     const airlineLogo =
       item?.segments[0]?.airline_logo ||
       logoData?.airline_logo ||
@@ -51,7 +64,7 @@ const FlightCard: React.FC<FlightCardProps> = ({ flightListData, airlines }) => 
 
     return (
       <View style={styles.card}>
-                <View style={styles.topRow}>
+        <View style={styles.topRow}>
           <View style={styles.logoRow}>
             <Image source={{ uri: airlineLogo }} style={styles.logo} />
             <Text style={styles.flightText}>
@@ -83,21 +96,41 @@ const FlightCard: React.FC<FlightCardProps> = ({ flightListData, airlines }) => 
         <View style={styles.infoSection}>
           <View style={styles.infoItem}>
             <Text style={styles.label}>Seats</Text>
-            <Text style={styles.value}>1</Text>
+            {item.fares && item.fares.length > 0 ? (
+              <>
+                <Text style={styles.value}>
+                  {item.fares[currentFareIndex[index] ?? 0].Seats_Available}{' '}
+                  Seats Left
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.value}>
+                  {item.available_seats} Seats Left
+                </Text>
+              </>
+            )}
           </View>
 
           <View style={styles.infoItem}>
             <Text style={styles.label}>Fare</Text>
             <Text style={styles.price}>
-              ₹ {item.fares?.[0]?.FareDetails?.[0]?.Total_Amount || item.adult_price}
+              ₹{' '}
+              {item.fares?.[0]?.FareDetails?.[0]?.Total_Amount ||
+                item.adult_price}
             </Text>
           </View>
         </View>
         <TouchableOpacity
           style={styles.bookBtn}
           onPress={() => {
-            dispatch(flightDetails({ ...item, selected_fare: currentFareIndex[index] }));
-            navigation.navigate('BookingTicket');
+            dispatch(
+              flightDetails({
+                ...item,
+                selected_fare: currentFareIndex[index],
+              }),
+            );
+            navigation.navigate('booking_flight');
           }}
         >
           <Text style={styles.bookText}>Book Now</Text>
@@ -159,7 +192,12 @@ const styles = StyleSheet.create({
 
   logoRow: { flexDirection: 'row', alignItems: 'center' },
   logo: { width: 45, height: 45, resizeMode: 'contain' },
-  flightText: { marginLeft: 8, fontSize: 15, fontWeight: '600', color: '#2C3E50' },
+  flightText: {
+    marginLeft: 8,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#2C3E50',
+  },
   dateText: { fontSize: 13, color: '#444', fontWeight: '500' },
 
   middleRow: {
@@ -174,7 +212,13 @@ const styles = StyleSheet.create({
   city: { fontSize: 12, color: '#7F8C8D' },
 
   centerSection: { alignItems: 'center', justifyContent: 'center' },
-  dot: { width: 4, height: 4, backgroundColor: '#aaa', borderRadius: 50, marginVertical: 4 },
+  dot: {
+    width: 4,
+    height: 4,
+    backgroundColor: '#aaa',
+    borderRadius: 50,
+    marginVertical: 4,
+  },
 
   infoSection: {
     marginTop: 15,
@@ -214,7 +258,11 @@ const styles = StyleSheet.create({
   },
 
   detailsHeader: { fontWeight: '700', marginBottom: 6, fontSize: 14 },
-  detailRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
   detailText: { fontSize: 13, color: '#333' },
   detailDate: { fontSize: 12, color: '#555' },
 });

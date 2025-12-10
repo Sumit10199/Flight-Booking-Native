@@ -1,10 +1,13 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
-import ProfileScreen from './Pages/profileScreen';
+import ProfileScreen from "./Pages/Profile/profileScreen";
 import HomeScreen from './Pages/Home1/homeScree1';
 import HomeStackNavigator from './HomeStackNavigator';
 import BookingScreen from "./Pages/MyBookings/MyBookings"
+import AccountStatementScreen from "./Pages/Statement/Statement"
+import PaymentScreen from "./Pages/PaymentModules/PaymentModules"
+import CancellationRequest from "./Pages/CancellationBooking/CancellationBooking"
 
 // import SettingsScreen from './screens/SettingsScreen';
 // import ProfileScreen from './screens/ProfileScreen';
@@ -17,6 +20,7 @@ export default function App() {
       <Tab.Navigator
         screenOptions={({ route }) => ({
           headerShown: false,
+          tabBarHideOnKeyboard:true,
           tabBarIcon: ({ focused, color, size }) => {
             let iconName:string="";
 

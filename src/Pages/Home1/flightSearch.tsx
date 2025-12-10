@@ -19,11 +19,12 @@ import { FlightPNR, User } from './types';
 import { useDispatch } from 'react-redux';
 import { travellerDetails } from '../../Store/BookingDetails/bookingDetails';
 import Toast from 'react-native-toast-message';
-import { useNavigation } from '@react-navigation/native';
+import {DrawerActions, useNavigation } from '@react-navigation/native';
 
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 interface Travellers {
   adults: number;
@@ -81,8 +82,8 @@ export default function FlightSearchForm() {
   const [showTravellerModal, setShowTravellerModal] = useState(false);
   const [airlines, setAirlines] = useState<Airline[]>([]);
   const [agentData, setAgentData] = useState<any>(null);
-  const [user, setUser] = useState<User>()
-  
+  const [user, setUser] = useState<User>();
+  const [availablePnrDates, setAvailablePnrDates] = useState<any>();
 
   const {
     control,
@@ -103,9 +104,20 @@ export default function FlightSearchForm() {
         infants: 0,
       },
     },
+    mode: 'onChange',
   });
 
   const watchedDepartureDate = watch('departureDate');
+
+  const greenMarkedDates =
+    availablePnrDates?.reduce((acc: any, date: string) => {
+      acc[date] = {
+        selected: true,
+        selectedColor: 'green',
+        selectedTextColor: 'white',
+      };
+      return acc;
+    }, {}) || {};
 
   function formatPassengers(data: Travellers) {
     return (
@@ -239,7 +251,7 @@ export default function FlightSearchForm() {
     }
   };
 
-   const fetchAgentDetails = async (id: number) => {
+  const fetchAgentDetails = async (id: number) => {
     try {
       const response: GlobalResponseType<{
         status: boolean;
@@ -252,14 +264,35 @@ export default function FlightSearchForm() {
       });
 
       if (response?.status === 200 && response?.data?.status) {
-        setUser(response?.data?.data)
-        
+        setUser(response?.data?.data);
       }
     } catch (error) {
-      console.error("Error fetching agent details:", error);
+      console.error('Error fetching agent details:', error);
     }
   };
 
+  const getTwoMonthsofAvailablePNR = async (
+    origin_apt: string,
+    destin_apt: string,
+  ) => {
+    try {
+      const response: GlobalResponseType<{
+        status: boolean;
+        result: any[];
+      }> = await postData({
+        url: endpoints.GET_TWO_MONTHS_AVALIABLE_PNR,
+        body: {
+          origin_apt,
+          destin_apt,
+        },
+      });
+      if (response.status === 200 && response.data.status) {
+        setAvailablePnrDates(response.data.result);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -274,23 +307,31 @@ export default function FlightSearchForm() {
     };
     loadData();
     getAirlines();
-   
   }, []);
 
-  useEffect(()=>{
-     if (agentData?.id) {
+  useEffect(() => {
+    if (agentData?.id) {
       fetchAgentDetails(agentData?.id);
     }
-  },[agentData?.id])
-  
+  }, [agentData?.id]);
 
-
+  useEffect(() => {
+    getTwoMonthsofAvailablePNR(watch('origin'), watch('destination'));
+  }, [watch('origin'), watch('destination')]);
 
   return (
     <View>
       <View style={styles.headerContainer}>
-        <Text style={styles.headerTitle}>SMT Travel Agency</Text>
+        <TouchableOpacity
+          style={styles.menuIcon}
+          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+        >
+          <Icon name="menu" size={28} color="#fff" />
+        </TouchableOpacity>
+
+        <Text style={styles.headerTitle}>{agentData?.application_header_name}</Text>
       </View>
+
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         <View style={styles.container}>
           <View style={styles.row_design}>
@@ -380,16 +421,18 @@ export default function FlightSearchForm() {
                 selectedDayTextColor: 'white',
                 arrowColor: '#007AFF',
               }}
-              markedDates={
-                watchedDepartureDate
+              markedDates={{
+                ...greenMarkedDates,
+                ...(watchedDepartureDate
                   ? {
                       [watchedDepartureDate]: {
                         selected: true,
                         selectedColor: '#007AFF',
+                        selectedTextColor: 'white',
                       },
                     }
-                  : {}
-              }
+                  : {}),
+              }}
             />
           )}
           {errors.departureDate && (
@@ -457,7 +500,7 @@ export default function FlightSearchForm() {
                       </TouchableOpacity>
 
                       <Text style={styles.count}>
-                        {getValues('travellers')[type]}
+                        {watch('travellers')[type]}
                       </Text>
 
                       <TouchableOpacity
@@ -591,23 +634,6 @@ const styles = StyleSheet.create({
   doneText: {
     color: '#fff',
     fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  headerContainer: {
-    backgroundColor: '#e68725',
-    paddingVertical: 15,
-    width: '100%',
-    alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
     textAlign: 'center',
   },
 
@@ -753,5 +779,21 @@ const styles = StyleSheet.create({
     color: 'red',
     marginBottom: 8,
     marginLeft: 6,
+  },
+  headerContainer: {
+    height: 60,
+    justifyContent: 'center',
+    backgroundColor: '#e68725',
+  },
+  menuIcon: {
+    position: 'absolute',
+    left: 15,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+    textAlign: 'center',
+    alignSelf: 'center',
   },
 });

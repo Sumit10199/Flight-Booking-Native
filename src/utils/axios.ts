@@ -4,8 +4,8 @@ import Config from "react-native-config";
 
 // ⚠️ Localhost won't work in React Native emulator/phone
 // Replace with your machine IP if running locally, e.g.:
-// const BASE_URL = " https://7c529f5eca79.ngrok-free.app/";
-const BASE_URL ="http://192.168.0.106:3001"
+// const BASE_URL = "https://partis-untested-marna.ngrok-free.dev/";
+const BASE_URL = "http://192.168.0.101:3001";
 
 interface IFaceGlobalResponseType<T> {
   status: number;

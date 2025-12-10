@@ -28,7 +28,7 @@ export default function Header({ title, onBack }: HeaderProps) {
 const styles = StyleSheet.create({
   header: {
     height: 55,
-    backgroundColor: '#fff',
+    backgroundColor: '#e68725',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,

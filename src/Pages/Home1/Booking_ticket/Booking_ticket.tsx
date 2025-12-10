@@ -325,6 +325,14 @@ function BookingTicket() {
     if (type === 'Infant') return requirements.includes('require_dob_inf');
     return false;
   };
+  const [openGroup, setOpenGroup] = useState<Record<PassengerType, boolean>>({
+  Adult: true,
+  Child: true,
+  Infant: true,
+});
+
+const toggleGroup = (type: PassengerType) =>
+  setOpenGroup(prev => ({ ...prev, [type]: !prev[type] }));
 
   const isFLightInternational = () => {
     if (flightDetails?.isinternational) return true;
@@ -528,107 +536,227 @@ function BookingTicket() {
       )}
 
       <ScrollView style={{ flex: 1, padding: 15, backgroundColor: '#f5f5f5' }}>
-        {(['Adult', 'Child', 'Infant'] as PassengerType[]).map(type => {
-          const list = grouped[type];
-          if (!list || list.length === 0) return null;
+       {(['Adult', 'Child', 'Infant'] as PassengerType[]).map(type => {
+  const list = grouped[type];
+  if (!list || list.length === 0) return null;
 
-          return (
-            <View
-              key={type}
-              style={{
-                backgroundColor: '#fff',
-                padding: 15,
-                borderRadius: 10,
-                marginBottom: 15,
-                elevation: 2,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: 'bold',
-                  marginBottom: 10,
-                  textAlign: 'center',
-                }}
-              >
-                {type}
-                {list.length > 1 ? 's' : ''}
-              </Text>
+  return (
+    <View
+      key={type}
+      style={{
+        backgroundColor: '#fff',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 15,
+        elevation: 2,
+      }}
+    >
+      {/* Collapsible header */}
+      <TouchableOpacity
+        style={styles.collapHeader}
+        onPress={() => toggleGroup(type)}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.collapHeaderText}>
+          {type}
+          {list.length > 1 ? 's' : ''} ({list.length})
+        </Text>
+        <Text style={styles.chev}>{openGroup[type] ? '▲' : '▼'}</Text>
+      </TouchableOpacity>
 
-              {list.map((_, relIndex) => {
-                let index = 0;
-                if (type === 'Adult') index = relIndex;
-                else if (type === 'Child')
-                  index = grouped.Adult.length + relIndex;
-                else
-                  index =
-                    grouped.Adult.length + grouped.Child.length + relIndex;
+      {/* Collapsible body */}
+      {openGroup[type] && (
+        <>
+          {list.map((_, relIndex) => {
+            let index = 0;
+            if (type === 'Adult') index = relIndex;
+            else if (type === 'Child') index = grouped.Adult.length + relIndex;
+            else index = grouped.Adult.length + grouped.Child.length + relIndex;
 
-                return (
-                  <View
-                    key={`${type}-${relIndex}`}
-                    style={{ marginBottom: 15 }}
-                  >
-                    <Controller
-                      control={control}
-                      name={`passengers.${index}.type`}
-                      defaultValue={type}
-                      render={({ field }) => (
-                        <View style={{ display: 'none' }} />
-                      )}
-                    />
+            return (
+              <View key={`${type}-${relIndex}`} style={{ marginBottom: 15 }}>
+                {/* keep your existing Controllers exactly as-is below */}
+                <Controller
+                  control={control}
+                  name={`passengers.${index}.type`}
+                  defaultValue={type}
+                  render={() => <View style={{ display: 'none' }} />}
+                />
 
-                    <Controller
-                      control={control}
-                      name={`passengers.${index}.title`}
-                      render={({ field }) => (
-                        <View style={{ display: 'none' }} />
-                      )}
-                    />
+                <Controller
+                  control={control}
+                  name={`passengers.${index}.title`}
+                  render={() => <View style={{ display: 'none' }} />}
+                />
 
-                    <Controller
-                      control={control}
-                      name={`passengers.${index}.title`}
-                      render={({ field: { onChange, value } }) => {
-                        const options =
-                          type === 'Child' || type === 'Infant'
-                            ? [
-                                { label: 'Master', value: 'Mstr.' },
-                                { label: 'Miss', value: 'Miss' },
-                              ]
-                            : [
-                                { label: 'Mr.', value: 'Mr.' },
-                                { label: 'Mrs.', value: 'Mrs.' },
-                                { label: 'Ms.', value: 'Ms.' },
-                              ];
+                <Controller
+                  control={control}
+                  name={`passengers.${index}.title`}
+                  render={({ field: { onChange, value } }) => {
+                    const options =
+                      type === 'Child' || type === 'Infant'
+                        ? [
+                            { label: 'Master', value: 'Mstr.' },
+                            { label: 'Miss', value: 'Miss' },
+                          ]
+                        : [
+                            { label: 'Mr.', value: 'Mr.' },
+                            { label: 'Mrs.', value: 'Mrs.' },
+                            { label: 'Ms.', value: 'Ms.' },
+                          ];
 
-                        const defaultValue =
-                          value ||
-                          (type === 'Child' || type === 'Infant'
-                            ? 'Mstr.'
-                            : 'Mr.');
+                    const defaultValue =
+                      value ||
+                      (type === 'Child' || type === 'Infant' ? 'Mstr.' : 'Mr.');
 
-                        return (
-                          <Dropdown
-                            style={styles.dropdown}
-                            placeholder="Select Title"
-                            placeholderStyle={{ color: '#888' }}
-                            selectedTextStyle={{ color: '#000' }}
-                            data={options}
-                            labelField="label"
-                            valueField="value"
-                            value={defaultValue}
-                            onChange={item => onChange(item.value)}
-                          />
-                        );
+                    return (
+                      <Dropdown
+                        style={styles.dropdown}
+                        placeholder="Select Title"
+                        placeholderStyle={{ color: '#888' }}
+                        selectedTextStyle={{ color: '#000' }}
+                        data={options}
+                        labelField="label"
+                        valueField="value"
+                        value={defaultValue}
+                        onChange={item => onChange(item.value)}
+                      />
+                    );
+                  }}
+                />
+
+                <Controller
+                  control={control}
+                  name={`passengers.${index}.firstName` as const}
+                  rules={{ required: 'First name is required' }}
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={{
+                        borderWidth: 1,
+                        borderColor: '#ccc',
+                        borderRadius: 8,
+                        padding: 10,
+                        marginVertical: 5,
                       }}
+                      placeholder="First Name"
+                      placeholderTextColor={'black'}
+                      value={value}
+                      onChangeText={onChange}
                     />
+                  )}
+                />
+                {errors.passengers?.[index]?.firstName && (
+                  <Text style={{ color: 'red', fontSize: 12 }}>
+                    {errors.passengers[index]?.firstName?.message}
+                  </Text>
+                )}
+
+                <Controller
+                  control={control}
+                  name={`passengers.${index}.lastName` as const}
+                  rules={{ required: 'Last name is required' }}
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={{
+                        borderWidth: 1,
+                        borderColor: '#ccc',
+                        borderRadius: 8,
+                        padding: 10,
+                        marginVertical: 5,
+                      }}
+                      placeholder="Last Name"
+                      value={value}
+                      onChangeText={onChange}
+                      placeholderTextColor={'black'}
+                    />
+                  )}
+                />
+                {errors.passengers?.[index]?.lastName && (
+                  <Text style={{ color: 'red', fontSize: 12 }}>
+                    {errors.passengers[index]?.lastName?.message}
+                  </Text>
+                )}
+
+                <Controller
+                  control={control}
+                  name={`passengers.${index}.needWheelchair`}
+                  render={({ field: { onChange, value } }) => {
+                    const wheelchairOptions = [
+                      { label: 'No', value: 'NO' },
+                      { label: 'Yes', value: 'YES' },
+                    ];
+                    return (
+                      <Dropdown
+                        style={styles.dropdown}
+                        data={wheelchairOptions}
+                        labelField="label"
+                        valueField="value"
+                        placeholder="Need Wheelchair?"
+                        placeholderStyle={{ color: '#888' }}
+                        selectedTextStyle={{ color: '#000' }}
+                        value={value}
+                        onChange={item => onChange(item.value)}
+                      />
+                    );
+                  }}
+                />
+
+                {isDobRequired(type) && (
+                  <Controller
+                    control={control}
+                    name={`passengers.${index}.dob` as const}
+                    rules={{ required: 'Date of birth is required' }}
+                    render={({ field: { onChange, value } }) => (
+                      <TextInput
+                        placeholder="YYYY-MM-DD"
+                        placeholderTextColor={'black'}
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#ccc',
+                          borderRadius: 8,
+                          padding: 10,
+                          marginVertical: 5,
+                        }}
+                        value={value}
+                        onChangeText={onChange}
+                      />
+                    )}
+                  />
+                )}
+
+                {isPassportRequired(type) && (
+                  <Controller
+                    control={control}
+                    name={`passengers.${index}.passportNo` as const}
+                    rules={{ required: 'Passport No is required' }}
+                    render={({ field: { onChange, value } }) => (
+                      <TextInput
+                        placeholder="Passport No"
+                        placeholderTextColor={'black'}
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#ccc',
+                          borderRadius: 8,
+                          padding: 10,
+                          marginVertical: 5,
+                        }}
+                        value={value}
+                        onChangeText={onChange}
+                      />
+                    )}
+                  />
+                )}
+
+                {isFLightInternational() && (
+                  <>
                     <Controller
                       control={control}
-                      name={`passengers.${index}.firstName` as const}
-                      rules={{ required: 'First name is required' }}
+                      name={`passengers.${index}.passport_expirydate` as const}
+                      rules={{ required: 'Passport Expiry Date is required' }}
                       render={({ field: { onChange, value } }) => (
                         <TextInput
+                          placeholder="Expiry YYYY-MM-DD"
+                          placeholderTextColor={'black'}
                           style={{
                             borderWidth: 1,
                             borderColor: '#ccc',
@@ -636,24 +764,21 @@ function BookingTicket() {
                             padding: 10,
                             marginVertical: 5,
                           }}
-                          placeholder="First Name"
-                          placeholderTextColor={'black'}
                           value={value}
                           onChangeText={onChange}
                         />
                       )}
                     />
-                    {errors.passengers?.[index]?.firstName && (
-                      <Text style={{ color: 'red', fontSize: 12 }}>
-                        {errors.passengers[index]?.firstName?.message}
-                      </Text>
-                    )}
                     <Controller
                       control={control}
-                      name={`passengers.${index}.lastName` as const}
-                      rules={{ required: 'Last name is required' }}
+                      name={
+                        `passengers.${index}.passport_issuing_country_code` as const
+                      }
+                      rules={{ required: 'Country Code is required' }}
                       render={({ field: { onChange, value } }) => (
                         <TextInput
+                          placeholder="Country Code"
+                          placeholderTextColor={'black'}
                           style={{
                             borderWidth: 1,
                             borderColor: '#ccc',
@@ -661,166 +786,42 @@ function BookingTicket() {
                             padding: 10,
                             marginVertical: 5,
                           }}
-                          placeholder="Last Name"
                           value={value}
                           onChangeText={onChange}
-                          placeholderTextColor={'black'}
                         />
                       )}
                     />
-                    {errors.passengers?.[index]?.lastName && (
-                      <Text style={{ color: 'red', fontSize: 12 }}>
-                        {errors.passengers[index]?.lastName?.message}
-                      </Text>
-                    )}
-
                     <Controller
                       control={control}
-                      name={`passengers.${index}.needWheelchair`}
-                      render={({ field: { onChange, value } }) => {
-                        const wheelchairOptions = [
-                          { label: 'No', value: 'NO' },
-                          { label: 'Yes', value: 'YES' },
-                        ];
-
-                        return (
-                          <Dropdown
-                            style={styles.dropdown}
-                            data={wheelchairOptions}
-                            labelField="label"
-                            valueField="value"
-                            placeholder="Need Wheelchair?"
-                            placeholderStyle={{ color: '#888' }}
-                            selectedTextStyle={{ color: '#000' }}
-                            value={value}
-                            onChange={item => onChange(item.value)}
-                          />
-                        );
-                      }}
-                    />
-
-                    {isDobRequired(type) && (
-                      <Controller
-                        control={control}
-                        name={`passengers.${index}.dob` as const}
-                        rules={{ required: 'Date of birth is required' }}
-                        render={({ field: { onChange, value } }) => (
-                          <TextInput
-                            placeholder="YYYY-MM-DD"
-                            placeholderTextColor={'black'}
-                            style={{
-                              borderWidth: 1,
-                              borderColor: '#ccc',
-                              borderRadius: 8,
-                              padding: 10,
-                              marginVertical: 5,
-                            }}
-                            value={value}
-                            onChangeText={onChange}
-                          />
-                        )}
-                      />
-                    )}
-
-                    {isPassportRequired(type) && (
-                      <Controller
-                        control={control}
-                        name={`passengers.${index}.passportNo` as const}
-                        rules={{ required: 'Passport No is required' }}
-                        render={({ field: { onChange, value } }) => (
-                          <TextInput
-                            placeholder="Passport No"
-                            placeholderTextColor={'black'}
-                            style={{
-                              borderWidth: 1,
-                              borderColor: '#ccc',
-                              borderRadius: 8,
-                              padding: 10,
-                              marginVertical: 5,
-                            }}
-                            value={value}
-                            onChangeText={onChange}
-                          />
-                        )}
-                      />
-                    )}
-
-                    {isFLightInternational() && (
-                      <>
-                        <Controller
-                          control={control}
-                          name={
-                            `passengers.${index}.passport_expirydate` as const
-                          }
-                          rules={{
-                            required: 'Passport Expiry Date is required',
+                      name={`passengers.${index}.nationality` as const}
+                      rules={{ required: 'Nationality is required' }}
+                      render={({ field: { onChange, value } }) => (
+                        <TextInput
+                          placeholder="Nationality"
+                          placeholderTextColor={'black'}
+                          style={{
+                            borderWidth: 1,
+                            borderColor: '#ccc',
+                            borderRadius: 8,
+                            padding: 10,
+                            marginVertical: 5,
                           }}
-                          render={({ field: { onChange, value } }) => (
-                            <TextInput
-                              placeholder="Expiry YYYY-MM-DD"
-                              placeholderTextColor={'black'}
-                              style={{
-                                borderWidth: 1,
-                                borderColor: '#ccc',
-                                borderRadius: 8,
-                                padding: 10,
-                                marginVertical: 5,
-                              }}
-                              value={value}
-                              onChangeText={onChange}
-                            />
-                          )}
+                          value={value}
+                          onChangeText={onChange}
                         />
-                        <Controller
-                          control={control}
-                          name={
-                            `passengers.${index}.passport_issuing_country_code` as const
-                          }
-                          rules={{ required: 'Country Code is required' }}
-                          render={({ field: { onChange, value } }) => (
-                            <TextInput
-                              placeholder="Country Code"
-                              placeholderTextColor={'black'}
-                              style={{
-                                borderWidth: 1,
-                                borderColor: '#ccc',
-                                borderRadius: 8,
-                                padding: 10,
-                                marginVertical: 5,
-                              }}
-                              value={value}
-                              onChangeText={onChange}
-                            />
-                          )}
-                        />
-                        <Controller
-                          control={control}
-                          name={`passengers.${index}.nationality` as const}
-                          rules={{ required: 'Nationality is required' }}
-                          render={({ field: { onChange, value } }) => (
-                            <TextInput
-                              placeholder="Nationality"
-                              placeholderTextColor={'black'}
-                              style={{
-                                borderWidth: 1,
-                                borderColor: '#ccc',
-                                borderRadius: 8,
-                                padding: 10,
-                                marginVertical: 5,
-                              }}
-                              value={value}
-                              onChangeText={onChange}
-                            />
-                          )}
-                        />
-                      </>
-                    )}
-                  </View>
-                );
-              })}
-            </View>
-          );
-        })}
+                      )}
+                    />
+                  </>
+                )}
+              </View>
+            );
+          })}
+        </>
+      )}
+    </View>
+  );
+})}
+
 
         <View
           style={{
@@ -976,7 +977,7 @@ function BookingTicket() {
                     selectedTextStyle={{ color: '#000' }}
                     itemTextStyle={{ color: '#000' }}
                     data={paymentModule.map(gateway => ({
-                      label: gateway.payment_module,
+                      label: String(gateway.payment_module ?? "").replace(/^./, c => c.toUpperCase()),
                       value: gateway.id,
                     }))}
                     labelField="label"
@@ -1116,6 +1117,22 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 10,
   },
+  collapHeader: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  paddingVertical: 10,
+  paddingHorizontal: 12,
+  borderRadius: 8,
+  backgroundColor: '#eef2ff',
+  marginBottom: 12,
+},
+collapHeaderText: {
+  fontSize: 18,
+  fontWeight: 'bold',
+},
+chev: { fontSize: 18 },
+
   termsText: {
     marginLeft: 8,
     flexShrink: 1,
@@ -1168,7 +1185,7 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#374151',
-    textAlign: 'right',
+    textAlign: 'left',
   },
   dropdown: {
     height: 50,

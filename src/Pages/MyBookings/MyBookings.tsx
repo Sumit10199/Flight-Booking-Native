@@ -23,21 +23,18 @@ export default function MyBookings() {
   const [bookingList, setBookingList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const limit = 10;
+  
 
   const getFlightBookingList = async () => {
     setIsLoading(true);
     try {
       const response: GlobalResponseType<any> = await postData({
         url: endpoints.GET_AGENT_BOOKING_FLIGHT_LIST,
-        body: { page, limit },
+        body: { page:1, limit:1000000000000000000},
       });
 
       if (response.status === 200 && response.data.status) {
         setBookingList(response.data.result);
-        setTotalPages(response.data.pagination.totalPages);
       }
     } catch (error) {
       console.error(error);
@@ -48,7 +45,7 @@ export default function MyBookings() {
 
   useEffect(() => {
     getFlightBookingList();
-  }, [page]);
+  }, []);
 
   const filteredBookings = useMemo(() => {
     if (!searchTerm) return bookingList;
@@ -59,11 +56,11 @@ export default function MyBookings() {
           `${pax.pax_first_name} ${pax.pax_last_name}`.toLowerCase(),
         )
         .join(' ');
-      const formattedId = `T24H-${String(booking?.id).padStart(7, '0')}`;
+      // const formattedId = `T24H-${String(booking?.id).padStart(7, '0')}`;
 
       return (
         booking.pnr_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        formattedId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.display_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         passengerNames?.includes(searchTerm.toLowerCase())
       );
     });
@@ -124,9 +121,7 @@ export default function MyBookings() {
                 <Text style={styles.airline}>
                   {booking.flight_details[0]?.airline_name}
                 </Text>
-                <Text style={styles.bookingId}>{`T24H-${String(
-                  booking?.id,
-                ).padStart(7, '0')}`}</Text>
+                <Text style={styles.bookingId}>{booking.display_id}</Text>
               </View>
 
               <View style={styles.divider} />
@@ -217,25 +212,7 @@ export default function MyBookings() {
           ))
         )}
 
-        <View style={styles.pagination}>
-          <TouchableOpacity
-            disabled={page === 1}
-            onPress={() => setPage(page - 1)}
-            style={[styles.pageBtn, page === 1 && { opacity: 0.5 }]}
-          >
-            <Text>Prev</Text>
-          </TouchableOpacity>
-          <Text
-            style={{ marginHorizontal: 10 }}
-          >{`${page} / ${totalPages}`}</Text>
-          <TouchableOpacity
-            disabled={page === totalPages}
-            onPress={() => setPage(page + 1)}
-            style={[styles.pageBtn, page === totalPages && { opacity: 0.5 }]}
-          >
-            <Text>Next</Text>
-          </TouchableOpacity>
-        </View>
+        
       </ScrollView>
     </View>
   );

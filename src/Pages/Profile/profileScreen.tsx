@@ -10,6 +10,9 @@ import {
   ActivityIndicator,
   Switch,
   Linking,
+  UIManager,
+  Platform,
+  LayoutAnimation,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Clipboard from "@react-native-clipboard/clipboard";
@@ -18,52 +21,58 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Dropdown } from "react-native-element-dropdown";
 
-import { AuthContext } from "../authContext";
-import { postData } from "../utils/axios";
-import { endpoints } from "../utils/endpoints";
-import Entypo from 'react-native-vector-icons/Entypo';
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import { styles } from "./Registration/styles";
+import { AuthContext } from "../../authContext";
+import { postData } from "../../utils/axios";
+import { endpoints } from "../../utils/endpoints";
+import Entypo from "react-native-vector-icons/Entypo";
+import AntDesign from "react-native-vector-icons/AntDesign";
+import Ionicons from "react-native-vector-icons/Ionicons";
 
-    export interface Companytype {
-            support_email?: string;
-            support_number?: string;
-            pan_attachment?: any;
-            pan_card_holder_name: string;
-            pan_number?: string;
-            gst_number?: string;
-        
-        }
+// 👉 styles centralized
+import { profileStyles, colors } from "./types/index"; 
 
-
-        export interface usertype {
-        email: string;
-        phone: string;
-        title: string;
-        first_name: string
-        last_name: string
-    }
-
-
-
-    export interface Infotype {
-    country: number;
-    state: number;
-    city: string;
-    street: string;
-    pincode: string
+/* -------- ANDROID: enable LayoutAnimation -------- */
+if (
+  Platform.OS === "android" &&
+  // @ts-ignore
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  // @ts-ignore
+  UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
+/* ---------------- Types ---------------- */
+export interface Companytype {
+  support_email?: string;
+  support_number?: string;
+  pan_attachment?: any;
+  pan_card_holder_name: string;
+  pan_number?: string;
+  gst_number?: string;
+}
+
+export interface usertype {
+  email: string;
+  phone: string;
+  title: string;
+  first_name: string;
+  last_name: string;
+}
+
+export interface Infotype {
+  country: number;
+  state: number;
+  city: string;
+  street: string;
+  pincode: string;
+}
 
 export interface P_input {
-
-    current_password: string
-    new_password: string
+  current_password: string;
+  new_password: string;
 }
 
-/* ----------------------------
-   Schemas (mirrors web intent)
------------------------------ */
+/* ---------------- Schemas ---------------- */
 const userSchema = yup.object({
   title: yup.string().required("Title required"),
   first_name: yup.string().required("First name required"),
@@ -81,29 +90,104 @@ const infoSchema = yup.object({
 });
 
 const companySchema: yup.ObjectSchema<Companytype> = yup.object({
- pan_card_holder_name:yup.string().required("PAN Card Holder Name is Required"),
+  pan_card_holder_name: yup.string().required("PAN Card Holder Name is Required"),
   pan_number: yup.string().optional(),
   gst_number: yup.string().optional(),
-  support_email: yup.string().email(),
+  support_email: yup.string().email().optional(),
   support_number: yup.string().optional(),
   pan_attachment: yup.string().optional(),
 });
 
 const pwdSchema = yup.object({
   current_password: yup.string().required("Current password required"),
-  new_password: yup
-    .string()
-    .min(6, "Min 6 chars")
-    .required("New password required"),
+  new_password: yup.string().min(6, "Min 6 chars").required("New password required"),
 });
 
+/* ---------- Small UI helpers using centralized styles ---------- */
+function Labeled({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <View>
+      <Text style={profileStyles.label}>{label}</Text>
+      {children}
+    </View>
+  );
+}
 
+function ErrorText({ text }: { text?: string }) {
+  if (!text) return null;
+  return <Text style={profileStyles.errorText}>{text}</Text>;
+}
 
+function PrimaryButton({
+  title,
+  onPress,
+  disabled,
+}: {
+  title: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={() => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        onPress();
+      }}
+      disabled={disabled}
+      style={[profileStyles.primaryBtn, disabled && { opacity: 0.7 }]}
+      activeOpacity={0.9}
+    >
+      <Text style={profileStyles.primaryText}>{title}</Text>
+    </TouchableOpacity>
+  );
+}
 
+/* --------------- Accordion (single-open) --------------- */
+function AccordionSection({
+  title,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <View style={{ marginBottom: 16 }}>
+      {/* Header */}
+      <TouchableOpacity
+        onPress={() => {
+          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+          onToggle();
+        }}
+        activeOpacity={0.9}
+        style={profileStyles.accordionHeader}
+      >
+        <Text style={profileStyles.accordionHeaderText}>{title}</Text>
+        <View
+          style={{
+            backgroundColor: "rgba(255,255,255,0.15)",
+            padding: 6,
+            borderRadius: 999,
+          }}
+        >
+          <Ionicons name={open ? "chevron-up" : "chevron-down"} size={18} color="#fff" />
+        </View>
+      </TouchableOpacity>
+
+      {/* Body */}
+      {open ? <View style={[profileStyles.accordionBody, { gap: 12 }]}>{children}</View> : null}
+    </View>
+  );
+}
+
+/* --------------- Screen --------------- */
 export default function ProfileScreen() {
   const { logout } = useContext(AuthContext);
 
-  // ---- Local state (mirrors the web component flags) ----
+  // ---- Local state ----
   const [agent, setAgent] = useState<any>(null);
   const [countries, setCountries] = useState<any[]>([]);
   const [states, setStates] = useState<any[]>([]);
@@ -118,9 +202,18 @@ export default function ProfileScreen() {
   const [stayLoggedIn, setStayLoggedIn] = useState(false);
   const [showNewpass, setshowNewpass] = useState(false);
   const [showCurrent, setshowCurrent] = useState(false);
-  
 
-  // ---- Forms (same segmentation as web) ----
+  // ---------- Single-open accordion control ----------
+  type SectionKey = "user" | "company" | "address" | "apikey" | "password";
+  const [openKey, setOpenKey] = useState<SectionKey>("user");
+
+  const openOnly = (key: SectionKey) => {
+    if (openKey === key) return;
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setOpenKey(key);
+  };
+
+  // ---- Forms ----
   const {
     control: userControl,
     handleSubmit: handleUserSubmit,
@@ -161,12 +254,12 @@ export default function ProfileScreen() {
     mode: "onChange",
   });
 
-  const selectedCountry = watchInfo("country"); // number | null
+  const selectedCountry = watchInfo("country");
   const agentId = useMemo(() => agent?.id, [agent]);
   const apiKey = useMemo(() => agent?.shared_api_key || "", [agent]);
   const panAttachmentUrl = useMemo(() => agent?.pan_attachment || "", [agent]);
 
-  // Dropdown option builders (ensure numeric values)
+  // Dropdown option builders
   const titleOptions = useMemo(
     () => [
       { label: "Mrs.", value: "Mrs" },
@@ -184,7 +277,6 @@ export default function ProfileScreen() {
     [states]
   );
 
-  
   const fetchAgentDetails = async (id: number) => {
     try {
       const response = await postData({
@@ -205,14 +297,13 @@ export default function ProfileScreen() {
         url: endpoints.GET_STATES_BY_COUNTRY_ID,
         body: { countryId },
       });
-      if (response?.status === 200 && response?.data?.status) 
+      if (response?.status === 200 && response?.data?.status)
         setStates(response.data?.result || []);
     } catch (err) {
       console.error("Error loading states:", err);
     }
   };
 
-  
   useEffect(() => {
     const load = async () => {
       try {
@@ -237,20 +328,14 @@ export default function ProfileScreen() {
             setCompanyValue("support_number", value.support_number || "");
             setCompanyValue("pan_attachment", value.pan_attachment || "");
 
-            setInfoValue(
-              "country",
-              Number(value.country_id) 
-            );
-            setInfoValue(
-              "state",
-               Number(value.state) 
-            );
+            setInfoValue("country", Number(value.country_id));
+            setInfoValue("state", Number(value.state));
             setInfoValue("city", value.city || "");
             setInfoValue("street", value.address || "");
             setInfoValue("pincode", value.pincode || "");
 
             await AsyncStorage.setItem("userData", JSON.stringify(value));
-          } 
+          }
         }
 
         // Countries
@@ -260,7 +345,7 @@ export default function ProfileScreen() {
         });
         if (response.status === 200) setCountries(response.data?.result || []);
 
-        // States pre-load for known country (from value or cache)
+        // States pre-load
         const agentContryId =
           (agent?.country_id as number | undefined) ??
           (cachedUser?.country_id as number | undefined);
@@ -274,16 +359,15 @@ export default function ProfileScreen() {
       }
     };
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
- 
   useEffect(() => {
     if (!selectedCountry) return;
     loadStatesForCountry(Number(selectedCountry));
-   
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCountry]);
 
- 
   const onSaveUser = async (f: usertype) => {
     if (!agentId) return Alert.alert("Missing", "Agent not loaded yet.");
     setIsUserSaving(true);
@@ -438,57 +522,44 @@ export default function ProfileScreen() {
   if (loadingProfile) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" color="#305E92" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
+    <View style={profileStyles.screen}>
       {/* Header */}
-      <View
-        style={{
-          paddingHorizontal: 16,
-          paddingVertical: 14,
-          borderBottomWidth: 1,
-          borderBottomColor: "#eee",
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Text style={{ fontSize: 18, fontWeight: "700" }}>User Profile</Text>
-        <TouchableOpacity
-          onPress={logout}
-          style={{
-            backgroundColor: "#ef4444",
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            borderRadius: 8,
-          }}
-        >
-          <Text style={{ color: "#fff", fontWeight: "700" }}>Logout</Text>
+      <View style={profileStyles.header}>
+        <Text style={profileStyles.headerText}>User Profile</Text>
+        <TouchableOpacity onPress={logout} style={profileStyles.logoutBtn}>
+          <Text style={profileStyles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={profileStyles.container}>
         {/* User Information */}
-        <SectionTitle title="User Information" />
-        <View style={{ gap: 12 }}>
-          {/* Title (Dropdown) */}
+        <AccordionSection
+          title="User Information"
+          open={openKey === "user"}
+          onToggle={() => openOnly("user")}
+        >
           <Labeled label="Title">
             <Controller
               control={userControl}
               name="title"
               render={({ field: { onChange, value } }) => (
                 <Dropdown
-                  style={DROPDOWN}
+                  style={profileStyles.dropdown}
                   data={titleOptions}
                   labelField="label"
                   valueField="value"
                   placeholder="Title"
                   value={value || null}
                   onChange={(item: any) => onChange(item.value)}
+                  placeholderStyle={profileStyles.dropdownPlaceholder}
+                  selectedTextStyle={profileStyles.dropdownSelectedText}
+                  inputSearchStyle={profileStyles.dropdownSearchInput}
                 />
               )}
             />
@@ -500,7 +571,12 @@ export default function ProfileScreen() {
               control={userControl}
               name="first_name"
               render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput style={INPUT} value={value || ""} onChangeText={onChange} onBlur={onBlur} />
+                <TextInput
+                  style={profileStyles.input}
+                  value={value || ""}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                />
               )}
             />
             <ErrorText text={userErrors?.first_name?.message} />
@@ -511,7 +587,12 @@ export default function ProfileScreen() {
               control={userControl}
               name="last_name"
               render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput style={INPUT} value={value || ""} onChangeText={onChange} onBlur={onBlur} />
+                <TextInput
+                  style={profileStyles.input}
+                  value={value || ""}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                />
               )}
             />
             <ErrorText text={userErrors?.last_name?.message} />
@@ -523,7 +604,7 @@ export default function ProfileScreen() {
               name="email"
               render={({ field: { value } }) => (
                 <TextInput
-                  style={[INPUT, { backgroundColor: "#f5f5f5" }]}
+                  style={[profileStyles.input, profileStyles.inputDisabled]}
                   value={value || ""}
                   editable={false}
                 />
@@ -538,7 +619,7 @@ export default function ProfileScreen() {
               name="phone"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  style={INPUT}
+                  style={profileStyles.input}
                   value={value || ""}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -554,18 +635,21 @@ export default function ProfileScreen() {
             disabled={isUserSaving}
             onPress={handleUserSubmit(onSaveUser)}
           />
-        </View>
+        </AccordionSection>
 
         {/* Company Information */}
-        <SectionTitle title="Company Information" />
-        <View style={{ gap: 12 }}>
+        <AccordionSection
+          title="Company Information"
+          open={openKey === "company"}
+          onToggle={() => openOnly("company")}
+        >
           <Labeled label="PAN Name">
             <Controller
               control={companyControl}
               name="pan_card_holder_name"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  style={[INPUT, { backgroundColor: "#f5f5f5" }]}
+                  style={[profileStyles.input, profileStyles.inputDisabled]}
                   value={value || ""}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -582,7 +666,7 @@ export default function ProfileScreen() {
               name="pan_number"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  style={[INPUT, { backgroundColor: "#f5f5f5" }]}
+                  style={[profileStyles.input, profileStyles.inputDisabled]}
                   value={value || ""}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -596,9 +680,7 @@ export default function ProfileScreen() {
           <Labeled label="PAN Attachment">
             {!!panAttachmentUrl ? (
               <TouchableOpacity onPress={() => Linking.openURL(panAttachmentUrl)}>
-                <Text style={{ color: "#2563EB", fontWeight: "600" }}>
-                  View Current PAN Attachment
-                </Text>
+                <Text style={{ color: "#2563EB", fontWeight: "600" }}>View Current PAN Attachment</Text>
               </TouchableOpacity>
             ) : (
               <Text style={{ color: "#6B7280" }}>No attachment uploaded</Text>
@@ -610,7 +692,12 @@ export default function ProfileScreen() {
               control={companyControl}
               name="gst_number"
               render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput style={INPUT} value={value || ""} onChangeText={onChange} onBlur={onBlur} />
+                <TextInput
+                  style={profileStyles.input}
+                  value={value || ""}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                />
               )}
             />
           </Labeled>
@@ -621,7 +708,7 @@ export default function ProfileScreen() {
               name="support_email"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  style={INPUT}
+                  style={profileStyles.input}
                   value={value || ""}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -638,7 +725,7 @@ export default function ProfileScreen() {
               name="support_number"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  style={INPUT}
+                  style={profileStyles.input}
                   value={value || ""}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -654,18 +741,21 @@ export default function ProfileScreen() {
             disabled={isCompanySaving}
             onPress={handleCompanySubmit(onSaveCompany)}
           />
-        </View>
+        </AccordionSection>
 
-        {/* Address / Info (Country/State as Dropdowns) */}
-        <SectionTitle title="Company Information" />
-        <View style={{ gap: 12 }}>
+        {/* Address / Info */}
+        <AccordionSection
+          title="Address & Location"
+          open={openKey === "address"}
+          onToggle={() => openOnly("address")}
+        >
           <Labeled label="Country">
             <Controller
               control={infoControl}
               name="country"
               render={({ field: { onChange, value } }) => (
                 <Dropdown
-                  style={DROPDOWN}
+                  style={profileStyles.dropdown}
                   data={countryOptions}
                   labelField="label"
                   valueField="value"
@@ -674,13 +764,13 @@ export default function ProfileScreen() {
                   onChange={async (item: any) => {
                     const cid = Number(item.value);
                     onChange(cid);
-                    setStates([]);               // clear old list
+                    setStates([]); // clear old list
                     await loadStatesForCountry(cid);
                   }}
                   search
-                  inputSearchStyle={DROPDOWN_SEARCH}
-                  placeholderStyle={DROPDOWN_PLACEHOLDER}
-                  selectedTextStyle={DROPDOWN_SELECTED}
+                  inputSearchStyle={profileStyles.dropdownSearchInput}
+                  placeholderStyle={profileStyles.dropdownPlaceholder}
+                  selectedTextStyle={profileStyles.dropdownSelectedText}
                 />
               )}
             />
@@ -693,7 +783,7 @@ export default function ProfileScreen() {
               name="state"
               render={({ field: { onChange, value } }) => (
                 <Dropdown
-                  style={DROPDOWN}
+                  style={profileStyles.dropdown}
                   data={stateOptions}
                   labelField="label"
                   valueField="value"
@@ -701,9 +791,9 @@ export default function ProfileScreen() {
                   value={typeof value === "number" ? value : null}
                   onChange={(item: any) => onChange(Number(item.value))}
                   search
-                  inputSearchStyle={DROPDOWN_SEARCH}
-                  placeholderStyle={DROPDOWN_PLACEHOLDER}
-                  selectedTextStyle={DROPDOWN_SELECTED}
+                  inputSearchStyle={profileStyles.dropdownSearchInput}
+                  placeholderStyle={profileStyles.dropdownPlaceholder}
+                  selectedTextStyle={profileStyles.dropdownSelectedText}
                 />
               )}
             />
@@ -715,7 +805,12 @@ export default function ProfileScreen() {
               control={infoControl}
               name="city"
               render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput style={INPUT} value={value || ""} onChangeText={onChange} onBlur={onBlur} />
+                <TextInput
+                  style={profileStyles.input}
+                  value={value || ""}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                />
               )}
             />
             <ErrorText text={infoErrors?.city?.message} />
@@ -726,7 +821,12 @@ export default function ProfileScreen() {
               control={infoControl}
               name="street"
               render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput style={INPUT} value={value || ""} onChangeText={onChange} onBlur={onBlur} />
+                <TextInput
+                  style={profileStyles.input}
+                  value={value || ""}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                />
               )}
             />
             <ErrorText text={infoErrors?.street?.message} />
@@ -738,7 +838,7 @@ export default function ProfileScreen() {
               name="pincode"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  style={INPUT}
+                  style={profileStyles.input}
                   value={value || ""}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -754,93 +854,93 @@ export default function ProfileScreen() {
             disabled={isInfoSaving}
             onPress={handleInfoSubmit(onSaveInfo)}
           />
-        </View>
-
-        {/* My Markup */}
-        {/* <SectionTitle title="My Markup" />
-        <View style={{ gap: 12 }}>
-          <Text style={{ color: "#666" }}>
-            (Add your markup controls here — bind to a schema and POST like the others.)
-          </Text>
-          <PrimaryButton title="Update" onPress={() => Alert.alert("Stub", "Implement markup API")} />
-        </View> */}
+        </AccordionSection>
 
         {/* API Key */}
-        <SectionTitle title="API Key" />
-        <View style={{ gap: 12 }}>
-          <TextInput style={[INPUT, { backgroundColor: "#f5f5f5" }]} value={apiKey} editable={false} />
+        <AccordionSection
+          title="API Key"
+          open={openKey === "apikey"}
+          onToggle={() => openOnly("apikey")}
+        >
+          <TextInput
+            style={[profileStyles.input, profileStyles.inputDisabled]}
+            value={apiKey}
+            editable={false}
+          />
           <PrimaryButton title={copied ? "Copied!" : "Copy"} onPress={copyApiKey} />
-        </View>
+        </AccordionSection>
 
         {/* Change Password */}
-        <SectionTitle title="Change Password" />
-        <View style={{ gap: 12 }}>
+        <AccordionSection
+          title="Change Password"
+          open={openKey === "password"}
+          onToggle={() => openOnly("password")}
+        >
           <Labeled label="Current Password">
-  <View style={styles.passwordWrapper}>
-    <Controller
-      control={pwdControl}
-      name="current_password"
-      render={({ field: { onChange, onBlur, value } }) => (
-        <TextInput
-          style={styles.input}
-          value={value || ""}
-          onChangeText={onChange}
-          onBlur={onBlur}
-          secureTextEntry={!showCurrent}
-          placeholder="Current Password"
-          placeholderTextColor="#999"
-        />
-      )}
-    />
-    <TouchableOpacity
-      style={styles.eye}
-      onPress={() => setshowCurrent(!showCurrent)}
-    >
-      {showCurrent ? (
-        <Entypo name="eye-with-line" color="#000" size={24} />
-      ) : (
-        <AntDesign name="eye" color="#000" size={24} />
-      )}
-    </TouchableOpacity>
-  </View>
-  <ErrorText text={pwdErrors?.current_password?.message} />
-</Labeled>
+            <View style={profileStyles.passwordWrapper}>
+              <Controller
+                control={pwdControl}
+                name="current_password"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={profileStyles.passwordInput}
+                    value={value || ""}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    secureTextEntry={!showCurrent}
+                    placeholder="Current Password"
+                    placeholderTextColor={colors.placeholder}
+                  />
+                )}
+              />
+              <TouchableOpacity
+                style={profileStyles.passwordEye}
+                onPress={() => setshowCurrent(!showCurrent)}
+              >
+                {showCurrent ? (
+                  <Entypo name="eye-with-line" color="#000" size={24} />
+                ) : (
+                  <AntDesign name="eye" color="#000" size={24} />
+                )}
+              </TouchableOpacity>
+            </View>
+            <ErrorText text={pwdErrors?.current_password?.message} />
+          </Labeled>
 
           <Labeled label="New Password">
-  <View style={styles.passwordWrapper}>
-    <Controller
-      control={pwdControl}
-      name="new_password"
-      render={({ field: { onChange, onBlur, value } }) => (
-        <TextInput
-          style={styles.input}
-          value={value || ""}
-          onChangeText={onChange}
-          onBlur={onBlur}
-          secureTextEntry={!showNewpass}
-          placeholder="New Password"
-          placeholderTextColor="#999"
-        />
-      )}
-    />
-    <TouchableOpacity
-      style={styles.eye}
-      onPress={() => setshowNewpass(!showNewpass)}
-    >
-      {showNewpass ? (
-        <Entypo name="eye-with-line" color="#000" size={24} />
-      ) : (
-        <AntDesign name="eye" color="#000" size={24} />
-      )}
-    </TouchableOpacity>
-  </View>
-  <ErrorText text={pwdErrors?.new_password?.message} />
-</Labeled>
+            <View style={profileStyles.passwordWrapper}>
+              <Controller
+                control={pwdControl}
+                name="new_password"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={profileStyles.passwordInput}
+                    value={value || ""}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    secureTextEntry={!showNewpass}
+                    placeholder="New Password"
+                    placeholderTextColor={colors.placeholder}
+                  />
+                )}
+              />
+              <TouchableOpacity
+                style={profileStyles.passwordEye}
+                onPress={() => setshowNewpass(!showNewpass)}
+              >
+                {showNewpass ? (
+                  <Entypo name="eye-with-line" color="#000" size={24} />
+                ) : (
+                  <AntDesign name="eye" color="#000" size={24} />
+                )}
+              </TouchableOpacity>
+            </View>
+            <ErrorText text={pwdErrors?.new_password?.message} />
+          </Labeled>
 
-          {/* Stay logged in after password change */}
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}>
             <Switch value={stayLoggedIn} onValueChange={setStayLoggedIn} />
-            <Text style={{ marginLeft: 8, color: "#374151" }}>
+            <Text style={{ marginLeft: 8, color: colors.text }}>
               Stay logged in after password change
             </Text>
           </View>
@@ -850,111 +950,8 @@ export default function ProfileScreen() {
             disabled={isPwdSaving}
             onPress={handlePwdSubmit(onChangePassword)}
           />
-        </View>
+        </AccordionSection>
       </ScrollView>
     </View>
-  );
-}
-
-/* ---------------- UI helpers (simple + consistent) ---------------- */
-const INPUT = {
-  height: 48,
-  borderWidth: 1,
-  borderColor: "#D1D5DB",
-  borderRadius: 10,
-  paddingHorizontal: 12,
-  fontSize: 16,
-  backgroundColor: "#fff",
-  color: "#000",
-} as const;
-
-const DROPDOWN = {
-  height: 48,
-  borderWidth: 1,
-  borderColor: "#D1D5DB",
-  borderRadius: 10,
-  paddingHorizontal: 12,
-  justifyContent: "center",
-  backgroundColor: "#fff",
-} as const;
-
-const DROPDOWN_PLACEHOLDER = {
-  color: "#9CA3AF",
-} as const;
-
-const DROPDOWN_SELECTED = {
-  color: "#111827",
-  fontSize: 16,
-} as const;
-
-const DROPDOWN_SEARCH = {
-  height: 40,
-  fontSize: 16,
-} as const;
-
-function SectionTitle({ title }: { title: string }) {
-  return (
-    <View
-      style={{
-        marginTop: 24,
-        marginBottom: 12,
-        backgroundColor: "#305E92",
-        borderRadius: 8,
-      }}
-    >
-      <Text
-        style={{
-          color: "#fff",
-          textAlign: "center",
-          paddingVertical: 10,
-          fontWeight: "700",
-          fontSize: 16,
-        }}
-      >
-        {title}
-      </Text>
-    </View>
-  );
-}
-
-function Labeled({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <View>
-      <Text style={{ marginBottom: 6, color: "#374151", fontWeight: "600" }}>{label}</Text>
-      {children}
-    </View>
-  );
-}
-
-function ErrorText({ text }: { text?: string }) {
-  if (!text) return null;
-  return <Text style={{ color: "#ef4444", marginTop: 4 }}>{text}</Text>;
-}
-
-function PrimaryButton({
-  title,
-  onPress,
-  disabled,
-}: {
-  title: string;
-  onPress: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={disabled}
-      style={{
-        backgroundColor: "#EA8B27",
-        height: 48,
-        borderRadius: 10,
-        alignItems: "center",
-        justifyContent: "center",
-        marginTop: 8,
-        opacity: disabled ? 0.7 : 1,
-      }}
-    >
-      <Text style={{ color: "#fff", fontWeight: "700" }}>{title}</Text>
-    </TouchableOpacity>
   );
 }

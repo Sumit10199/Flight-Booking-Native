@@ -209,7 +209,12 @@ export default function MyBookings() {
                 {booking.passengers?.length !==
                   booking?.cancel_requests?.length && (
                   <TouchableOpacity
-                    style={[styles.actionBtn, styles.cancelBtn]}
+                    style={[styles.actionBtn, styles.cancelBtn]} 
+                    onPress={(()=>{
+                   navigation.navigate("cancel_booking", { booking: booking.id });
+                  dispatch(setEditBooking(booking));
+
+                })}
                   >
                     <Text style={styles.actionText}>Cancel Booking</Text>
                   </TouchableOpacity>

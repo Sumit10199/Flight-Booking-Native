@@ -1,18 +1,15 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from './Pages/Home1/homeScree1';
-import Flight_List from './Pages/Home1/Flight_List';
-import booking_flight from "./Pages/Home1/Booking_ticket/Booking_ticket"
 import NameChangeRequestScreen from './Pages/Name_change_request/NameChangeScreen';
+import BookingScreen from "./Pages/MyBookings/MyBookings"
 
 const HomeStack = createNativeStackNavigator();
 
-export default function HomeStackNavigator() {
+export default function BookingNavigator() {
   return (
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
-      <HomeStack.Screen name="HomeMain" component={HomeScreen} />
-      <HomeStack.Screen name="Flight_List" component={Flight_List} />
-      <HomeStack.Screen name="booking_flight" component={booking_flight} />
+      <HomeStack.Screen name="Booking" component={BookingScreen} />
       <HomeStack.Screen name="name_change" component={NameChangeRequestScreen} />
 
     </HomeStack.Navigator>

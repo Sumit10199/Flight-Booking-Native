@@ -8,6 +8,7 @@ import BookingScreen from "./Pages/MyBookings/MyBookings"
 import AccountStatementScreen from "./Pages/Statement/Statement"
 import PaymentScreen from "./Pages/PaymentModules/PaymentModules"
 import CancellationRequest from "./Pages/CancellationBooking/CancellationBooking"
+import BookingNavigator from './BookingNavigator';
 
 // import SettingsScreen from './screens/SettingsScreen';
 // import ProfileScreen from './screens/ProfileScreen';
@@ -45,7 +46,7 @@ export default function App() {
         })}
       >
         <Tab.Screen name="Home" component={HomeStackNavigator} />
-          <Tab.Screen name="Booking" component={BookingScreen} />
+          <Tab.Screen name="Booking" component={BookingNavigator} />
 
         <Tab.Screen name="Profile" component={ProfileScreen} />
         {/* <Tab.Screen name="Settings" component={SettingsScreen} /> */}

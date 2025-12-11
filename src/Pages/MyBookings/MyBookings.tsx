@@ -15,14 +15,17 @@ import Header from '../../Components/Header/Header';
 import { useNavigation } from '@react-navigation/native';
 import { GlobalResponseType, postData } from '../../utils/axios';
 import { endpoints } from '../../utils/endpoints';
+import { setEditBooking } from '../../Store/editBookingSlice/editBookingSlice';
+import { useDispatch } from 'react-redux';
 // import { generateInvoice } from '../generateInvoice/generateInvoice';
 // import { printTicket } from '../printTicket/printTicket';
 
 export default function MyBookings() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [bookingList, setBookingList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const dispatch = useDispatch();
   
 
   const getFlightBookingList = async () => {
@@ -195,7 +198,11 @@ export default function MyBookings() {
                   <Text style={styles.actionText}>Print Ticket</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionBtn}>
+                <TouchableOpacity style={styles.actionBtn} onPress={(()=>{
+                  navigation.navigate("name_change", { booking: booking.id });
+                  dispatch(setEditBooking(booking));
+
+                })}>
                   <Text style={styles.actionText}>Name Change</Text>
                 </TouchableOpacity>
 

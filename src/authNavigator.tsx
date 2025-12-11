@@ -7,6 +7,7 @@ import business_information from "./Pages/Registration/business_information"
 import { NavigationContainer } from '@react-navigation/native';
 import ForgetPasswordScreen from './Pages/ForgetPassword/forget_password';
 import ChangePasswordScreen from './Pages/ForgetPassword/ChangePasswordScreen';
+import ChangeNameScreen from './Pages/Name_change_request/NameChangeScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -20,6 +21,7 @@ export function AuthStack() {
                 <Stack.Screen name="business_information" component={business_information} />
                 <Stack.Screen name="ForgotPassword" component={ForgetPasswordScreen} />
                 <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+                <Stack.Screen name="ChangeName" component={ChangeNameScreen} />
             </Stack.Navigator>
         </NavigationContainer>
 

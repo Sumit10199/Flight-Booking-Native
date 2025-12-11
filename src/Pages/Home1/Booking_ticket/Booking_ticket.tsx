@@ -33,10 +33,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Dropdown } from 'react-native-element-dropdown';
 import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
+import Header from '../../../Components/Header/Header';
 
 function BookingTicket() {
   const [loader, setLoader] = useState(false);
-  const navigation=useNavigation<any>()
+  const navigation = useNavigation<any>();
   const [paymentModule, setPaymentModule] = useState<PaymentModule[]>([]);
   const [toggle, setToggle] = useState<boolean>();
   const [airlines, setAirlines] = useState<
@@ -201,14 +202,12 @@ function BookingTicket() {
         } else {
           AsyncStorage.removeItem('booking_flight');
           AsyncStorage.removeItem('traveller');
-          navigation.navigate("Booking")
+          navigation.navigate('Booking');
           Toast.show({
-          type: 'success',
-          text2: response?.data?.message,
-        });
-
+            type: 'success',
+            text2: response?.data?.message,
+          });
         }
-        
       } else {
         Toast.show({
           type: 'error',
@@ -236,7 +235,7 @@ function BookingTicket() {
         url: endpoints.GENERATE_PHONEPE_URL,
         body: { amount, book_id: booking_id },
       });
-      if (response.status === 200 && response.data.status) {        
+      if (response.status === 200 && response.data.status) {
         return response.data.url.redirectUrl;
       }
     } catch (error) {
@@ -326,13 +325,13 @@ function BookingTicket() {
     return false;
   };
   const [openGroup, setOpenGroup] = useState<Record<PassengerType, boolean>>({
-  Adult: true,
-  Child: true,
-  Infant: true,
-});
+    Adult: true,
+    Child: true,
+    Infant: true,
+  });
 
-const toggleGroup = (type: PassengerType) =>
-  setOpenGroup(prev => ({ ...prev, [type]: !prev[type] }));
+  const toggleGroup = (type: PassengerType) =>
+    setOpenGroup(prev => ({ ...prev, [type]: !prev[type] }));
 
   const isFLightInternational = () => {
     if (flightDetails?.isinternational) return true;
@@ -411,655 +410,690 @@ const toggleGroup = (type: PassengerType) =>
   }, [initialPassengers]);
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.routeTitle}>
-          {firstSeg?.origin} - {lastSeg?.destination}{' '}
-          {firstSeg ? dayjs(firstSeg.depDate).format('ddd, DD MMM, YYYY') : ''}
-        </Text>
-
-        <View style={styles.rowBetween}>
-          <Text style={styles.onwardText}>✈ Onward</Text>
-
-          <View style={{ alignItems: 'flex-end' }}>
-            {flightDetails?.fare_type && (
-              <Text style={styles.fareRuleLink}>Fare Rules</Text>
-            )}
-            <Text style={styles.fareTypeText}>{flightDetails?.fare_type}</Text>
-          </View>
-        </View>
-        <View style={styles.airlineRow}>
-          <Image
-            source={{ uri: firstSeg?.airline_logo }}
-            style={styles.airlineLogo}
-          />
-          <View style={{ marginLeft: 12 }}>
-            <Text style={styles.airlineName}>{firstSeg?.airline_name}</Text>
-            <Text style={styles.flightNo}>{firstSeg?.flightNo}</Text>
-          </View>
-        </View>
-        <View style={styles.segmentContainer}>
-          <View style={{ alignItems: 'flex-start' }}>
-            <Text style={styles.dateText}>
-              {dayjs(firstSeg?.depDate).format('ddd, DD MMM, YYYY')}
-            </Text>
-            <Text style={styles.timeText}>
-              {firstSeg?.origin} {firstSeg?.depTime}
-            </Text>
-            <Text style={styles.terminalText}>Terminal- N/A</Text>
-          </View>
-
-          <View style={styles.centerBox}>
-            <Text style={styles.nonStopText}>Non - Stop</Text>
-            <Text style={styles.planeIcon}>✈</Text>
-          </View>
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={styles.dateText}>
-              {dayjs(lastSeg?.arrDate).format('ddd, DD MMM, YYYY')}
-            </Text>
-            <Text style={styles.timeText}>
-              {lastSeg?.destination} {lastSeg?.arrTime}
-            </Text>
-            <Text style={styles.terminalText}>Terminal- N/A</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          onPress={() => setToggle(!toggle)}
-          style={styles.toggleButton}
-        >
-          <Text style={styles.toggleButtonText}>Flight Details</Text>
-        </TouchableOpacity>
+    <View style={{ flex: 1 }}>
+      <View>
+        <Header title="Bookings Details" onBack={() => navigation.goBack()} />
       </View>
-
-      {toggle && (
+      <ScrollView style={styles.container}>
         <View style={styles.card}>
-          {flightDetails?.segments?.map((s, index) => {
-            const logo_segemnt = airlines?.find(
-              item => item.airline_code === s.airline_code,
-            );
+          <Text style={styles.routeTitle}>
+            {firstSeg?.origin} - {lastSeg?.destination}{' '}
+            {firstSeg
+              ? dayjs(firstSeg.depDate).format('ddd, DD MMM, YYYY')
+              : ''}
+          </Text>
 
-            const airline_logo_segemnt =
-              s?.airline_logo ?? logo_segemnt?.airline_logo;
-            return (
-              <View key={index} style={styles.segmentBox}>
-                <View style={styles.rowBetween}>
-                  <View>
-                    <Image
-                      source={{ uri: airline_logo_segemnt }}
-                      style={styles.airlineLogo}
-                    />
-                    <Text style={styles.flightNo}>{s.flightNo}</Text>
-                  </View>
-                </View>
+          <View style={styles.rowBetween}>
+            <Text style={styles.onwardText}>✈ Onward</Text>
 
-                <View style={styles.routeContainer}>
-                  <View style={{ alignItems: 'flex-start', marginTop: 10 }}>
-                    <Text style={styles.timeText}>
-                      {s.depTime?.replace('HRS', '')}
-                    </Text>
-                    <Text style={styles.dateText}>
-                      {dayjs(s.depDate).format('DD MMM YYYY')}
-                    </Text>
-                    <Text style={styles.cityText}>{s.origin}</Text>
+            <View style={{ alignItems: 'flex-end' }}>
+              {flightDetails?.fare_type && (
+                <Text style={styles.fareRuleLink}>Fare Rules</Text>
+              )}
+              <Text style={styles.fareTypeText}>
+                {flightDetails?.fare_type}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.airlineRow}>
+            <Image
+              source={{ uri: firstSeg?.airline_logo }}
+              style={styles.airlineLogo}
+            />
+            <View style={{ marginLeft: 12 }}>
+              <Text style={styles.airlineName}>{firstSeg?.airline_name}</Text>
+              <Text style={styles.flightNo}>{firstSeg?.flightNo}</Text>
+            </View>
+          </View>
+          <View style={styles.segmentContainer}>
+            <View style={{ alignItems: 'flex-start' }}>
+              <Text style={styles.dateText}>
+                {dayjs(firstSeg?.depDate).format('ddd, DD MMM, YYYY')}
+              </Text>
+              <Text style={styles.timeText}>
+                {firstSeg?.origin} {firstSeg?.depTime}
+              </Text>
+              <Text style={styles.terminalText}>Terminal- N/A</Text>
+            </View>
+
+            <View style={styles.centerBox}>
+              <Text style={styles.nonStopText}>Non - Stop</Text>
+              <Text style={styles.planeIcon}>✈</Text>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={styles.dateText}>
+                {dayjs(lastSeg?.arrDate).format('ddd, DD MMM, YYYY')}
+              </Text>
+              <Text style={styles.timeText}>
+                {lastSeg?.destination} {lastSeg?.arrTime}
+              </Text>
+              <Text style={styles.terminalText}>Terminal- N/A</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            onPress={() => setToggle(!toggle)}
+            style={styles.toggleButton}
+          >
+            <Text style={styles.toggleButtonText}>Flight Details</Text>
+          </TouchableOpacity>
+        </View>
+
+        {toggle && (
+          <View style={styles.card}>
+            {flightDetails?.segments?.map((s, index) => {
+              const logo_segemnt = airlines?.find(
+                item => item.airline_code === s.airline_code,
+              );
+
+              const airline_logo_segemnt =
+                s?.airline_logo ?? logo_segemnt?.airline_logo;
+              return (
+                <View key={index} style={styles.segmentBox}>
+                  <View style={styles.rowBetween}>
+                    <View>
+                      <Image
+                        source={{ uri: airline_logo_segemnt }}
+                        style={styles.airlineLogo}
+                      />
+                      <Text style={styles.flightNo}>{s.flightNo}</Text>
+                    </View>
                   </View>
-                  <View style={styles.dot} />
-                  <View style={styles.dottedLine} />
-                  <View style={styles.dot} />
-                  <View style={[styles.rowBetween, { marginTop: 10 }]}>
-                    <View style={{ alignItems: 'flex-end' }}>
+
+                  <View style={styles.routeContainer}>
+                    <View style={{ alignItems: 'flex-start', marginTop: 10 }}>
                       <Text style={styles.timeText}>
-                        {s.arrTime?.replace('HRS', '')}
+                        {s.depTime?.replace('HRS', '')}
                       </Text>
                       <Text style={styles.dateText}>
-                        {dayjs(s.arrDate).format('DD MMM YYYY')}
+                        {dayjs(s.depDate).format('DD MMM YYYY')}
                       </Text>
-                      <Text style={styles.cityText}>{s.destination}</Text>
+                      <Text style={styles.cityText}>{s.origin}</Text>
+                    </View>
+                    <View style={styles.dot} />
+                    <View style={styles.dottedLine} />
+                    <View style={styles.dot} />
+                    <View style={[styles.rowBetween, { marginTop: 10 }]}>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text style={styles.timeText}>
+                          {s.arrTime?.replace('HRS', '')}
+                        </Text>
+                        <Text style={styles.dateText}>
+                          {dayjs(s.arrDate).format('DD MMM YYYY')}
+                        </Text>
+                        <Text style={styles.cityText}>{s.destination}</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={styles.baggageCard}>
+                    <View style={styles.rowBetween}>
+                      <Text style={styles.label}>Cabin</Text>
+                      <Text>{s.cabin_baggage || '-'}</Text>
+                    </View>
+                    <View style={styles.rowBetween}>
+                      <Text style={styles.label}>Check-in</Text>
+                      <Text>{s.baggage || '-'}</Text>
                     </View>
                   </View>
                 </View>
+              );
+            })}
+          </View>
+        )}
 
-                <View style={styles.baggageCard}>
-                  <View style={styles.rowBetween}>
-                    <Text style={styles.label}>Cabin</Text>
-                    <Text>{s.cabin_baggage || '-'}</Text>
-                  </View>
-                  <View style={styles.rowBetween}>
-                    <Text style={styles.label}>Check-in</Text>
-                    <Text>{s.baggage || '-'}</Text>
-                  </View>
-                </View>
-              </View>
-            );
-          })}
-        </View>
-      )}
-
-      <ScrollView style={{ flex: 1, padding: 15, backgroundColor: '#f5f5f5' }}>
-       {(['Adult', 'Child', 'Infant'] as PassengerType[]).map(type => {
-  const list = grouped[type];
-  if (!list || list.length === 0) return null;
-
-  return (
-    <View
-      key={type}
-      style={{
-        backgroundColor: '#fff',
-        padding: 15,
-        borderRadius: 10,
-        marginBottom: 15,
-        elevation: 2,
-      }}
-    >
-      {/* Collapsible header */}
-      <TouchableOpacity
-        style={styles.collapHeader}
-        onPress={() => toggleGroup(type)}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.collapHeaderText}>
-          {type}
-          {list.length > 1 ? 's' : ''} ({list.length})
-        </Text>
-        <Text style={styles.chev}>{openGroup[type] ? '▲' : '▼'}</Text>
-      </TouchableOpacity>
-
-      {/* Collapsible body */}
-      {openGroup[type] && (
-        <>
-          {list.map((_, relIndex) => {
-            let index = 0;
-            if (type === 'Adult') index = relIndex;
-            else if (type === 'Child') index = grouped.Adult.length + relIndex;
-            else index = grouped.Adult.length + grouped.Child.length + relIndex;
+        <ScrollView
+          style={{ flex: 1, padding: 15, backgroundColor: '#f5f5f5' }}
+        >
+          {(['Adult', 'Child', 'Infant'] as PassengerType[]).map(type => {
+            const list = grouped[type];
+            if (!list || list.length === 0) return null;
 
             return (
-              <View key={`${type}-${relIndex}`} style={{ marginBottom: 15 }}>
-                {/* keep your existing Controllers exactly as-is below */}
-                <Controller
-                  control={control}
-                  name={`passengers.${index}.type`}
-                  defaultValue={type}
-                  render={() => <View style={{ display: 'none' }} />}
-                />
-
-                <Controller
-                  control={control}
-                  name={`passengers.${index}.title`}
-                  render={() => <View style={{ display: 'none' }} />}
-                />
-
-                <Controller
-                  control={control}
-                  name={`passengers.${index}.title`}
-                  render={({ field: { onChange, value } }) => {
-                    const options =
-                      type === 'Child' || type === 'Infant'
-                        ? [
-                            { label: 'Master', value: 'Mstr.' },
-                            { label: 'Miss', value: 'Miss' },
-                          ]
-                        : [
-                            { label: 'Mr.', value: 'Mr.' },
-                            { label: 'Mrs.', value: 'Mrs.' },
-                            { label: 'Ms.', value: 'Ms.' },
-                          ];
-
-                    const defaultValue =
-                      value ||
-                      (type === 'Child' || type === 'Infant' ? 'Mstr.' : 'Mr.');
-
-                    return (
-                      <Dropdown
-                        style={styles.dropdown}
-                        placeholder="Select Title"
-                        placeholderStyle={{ color: '#888' }}
-                        selectedTextStyle={{ color: '#000' }}
-                        data={options}
-                        labelField="label"
-                        valueField="value"
-                        value={defaultValue}
-                        onChange={item => onChange(item.value)}
-                      />
-                    );
-                  }}
-                />
-
-                <Controller
-                  control={control}
-                  name={`passengers.${index}.firstName` as const}
-                  rules={{ required: 'First name is required' }}
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      style={{
-                        borderWidth: 1,
-                        borderColor: '#ccc',
-                        borderRadius: 8,
-                        padding: 10,
-                        marginVertical: 5,
-                      }}
-                      placeholder="First Name"
-                      placeholderTextColor={'black'}
-                      value={value}
-                      onChangeText={onChange}
-                    />
-                  )}
-                />
-                {errors.passengers?.[index]?.firstName && (
-                  <Text style={{ color: 'red', fontSize: 12 }}>
-                    {errors.passengers[index]?.firstName?.message}
+              <View
+                key={type}
+                style={{
+                  backgroundColor: '#fff',
+                  padding: 15,
+                  borderRadius: 10,
+                  marginBottom: 15,
+                  elevation: 2,
+                }}
+              >
+                {/* Collapsible header */}
+                <TouchableOpacity
+                  style={styles.collapHeader}
+                  onPress={() => toggleGroup(type)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.collapHeaderText}>
+                    {type}
+                    {list.length > 1 ? 's' : ''} ({list.length})
                   </Text>
-                )}
+                  <Text style={styles.chev}>{openGroup[type] ? '▲' : '▼'}</Text>
+                </TouchableOpacity>
 
-                <Controller
-                  control={control}
-                  name={`passengers.${index}.lastName` as const}
-                  rules={{ required: 'Last name is required' }}
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      style={{
-                        borderWidth: 1,
-                        borderColor: '#ccc',
-                        borderRadius: 8,
-                        padding: 10,
-                        marginVertical: 5,
-                      }}
-                      placeholder="Last Name"
-                      value={value}
-                      onChangeText={onChange}
-                      placeholderTextColor={'black'}
-                    />
-                  )}
-                />
-                {errors.passengers?.[index]?.lastName && (
-                  <Text style={{ color: 'red', fontSize: 12 }}>
-                    {errors.passengers[index]?.lastName?.message}
-                  </Text>
-                )}
-
-                <Controller
-                  control={control}
-                  name={`passengers.${index}.needWheelchair`}
-                  render={({ field: { onChange, value } }) => {
-                    const wheelchairOptions = [
-                      { label: 'No', value: 'NO' },
-                      { label: 'Yes', value: 'YES' },
-                    ];
-                    return (
-                      <Dropdown
-                        style={styles.dropdown}
-                        data={wheelchairOptions}
-                        labelField="label"
-                        valueField="value"
-                        placeholder="Need Wheelchair?"
-                        placeholderStyle={{ color: '#888' }}
-                        selectedTextStyle={{ color: '#000' }}
-                        value={value}
-                        onChange={item => onChange(item.value)}
-                      />
-                    );
-                  }}
-                />
-
-                {isDobRequired(type) && (
-                  <Controller
-                    control={control}
-                    name={`passengers.${index}.dob` as const}
-                    rules={{ required: 'Date of birth is required' }}
-                    render={({ field: { onChange, value } }) => (
-                      <TextInput
-                        placeholder="YYYY-MM-DD"
-                        placeholderTextColor={'black'}
-                        style={{
-                          borderWidth: 1,
-                          borderColor: '#ccc',
-                          borderRadius: 8,
-                          padding: 10,
-                          marginVertical: 5,
-                        }}
-                        value={value}
-                        onChangeText={onChange}
-                      />
-                    )}
-                  />
-                )}
-
-                {isPassportRequired(type) && (
-                  <Controller
-                    control={control}
-                    name={`passengers.${index}.passportNo` as const}
-                    rules={{ required: 'Passport No is required' }}
-                    render={({ field: { onChange, value } }) => (
-                      <TextInput
-                        placeholder="Passport No"
-                        placeholderTextColor={'black'}
-                        style={{
-                          borderWidth: 1,
-                          borderColor: '#ccc',
-                          borderRadius: 8,
-                          padding: 10,
-                          marginVertical: 5,
-                        }}
-                        value={value}
-                        onChangeText={onChange}
-                      />
-                    )}
-                  />
-                )}
-
-                {isFLightInternational() && (
+                {/* Collapsible body */}
+                {openGroup[type] && (
                   <>
-                    <Controller
-                      control={control}
-                      name={`passengers.${index}.passport_expirydate` as const}
-                      rules={{ required: 'Passport Expiry Date is required' }}
-                      render={({ field: { onChange, value } }) => (
-                        <TextInput
-                          placeholder="Expiry YYYY-MM-DD"
-                          placeholderTextColor={'black'}
-                          style={{
-                            borderWidth: 1,
-                            borderColor: '#ccc',
-                            borderRadius: 8,
-                            padding: 10,
-                            marginVertical: 5,
-                          }}
-                          value={value}
-                          onChangeText={onChange}
-                        />
-                      )}
-                    />
-                    <Controller
-                      control={control}
-                      name={
-                        `passengers.${index}.passport_issuing_country_code` as const
-                      }
-                      rules={{ required: 'Country Code is required' }}
-                      render={({ field: { onChange, value } }) => (
-                        <TextInput
-                          placeholder="Country Code"
-                          placeholderTextColor={'black'}
-                          style={{
-                            borderWidth: 1,
-                            borderColor: '#ccc',
-                            borderRadius: 8,
-                            padding: 10,
-                            marginVertical: 5,
-                          }}
-                          value={value}
-                          onChangeText={onChange}
-                        />
-                      )}
-                    />
-                    <Controller
-                      control={control}
-                      name={`passengers.${index}.nationality` as const}
-                      rules={{ required: 'Nationality is required' }}
-                      render={({ field: { onChange, value } }) => (
-                        <TextInput
-                          placeholder="Nationality"
-                          placeholderTextColor={'black'}
-                          style={{
-                            borderWidth: 1,
-                            borderColor: '#ccc',
-                            borderRadius: 8,
-                            padding: 10,
-                            marginVertical: 5,
-                          }}
-                          value={value}
-                          onChangeText={onChange}
-                        />
-                      )}
-                    />
+                    {list.map((_, relIndex) => {
+                      let index = 0;
+                      if (type === 'Adult') index = relIndex;
+                      else if (type === 'Child')
+                        index = grouped.Adult.length + relIndex;
+                      else
+                        index =
+                          grouped.Adult.length +
+                          grouped.Child.length +
+                          relIndex;
+
+                      return (
+                        <View
+                          key={`${type}-${relIndex}`}
+                          style={{ marginBottom: 15 }}
+                        >
+                          {/* keep your existing Controllers exactly as-is below */}
+                          <Controller
+                            control={control}
+                            name={`passengers.${index}.type`}
+                            defaultValue={type}
+                            render={() => <View style={{ display: 'none' }} />}
+                          />
+
+                          <Controller
+                            control={control}
+                            name={`passengers.${index}.title`}
+                            render={() => <View style={{ display: 'none' }} />}
+                          />
+
+                          <Controller
+                            control={control}
+                            name={`passengers.${index}.title`}
+                            render={({ field: { onChange, value } }) => {
+                              const options =
+                                type === 'Child' || type === 'Infant'
+                                  ? [
+                                      { label: 'Master', value: 'Mstr.' },
+                                      { label: 'Miss', value: 'Miss' },
+                                    ]
+                                  : [
+                                      { label: 'Mr.', value: 'Mr.' },
+                                      { label: 'Mrs.', value: 'Mrs.' },
+                                      { label: 'Ms.', value: 'Ms.' },
+                                    ];
+
+                              const defaultValue =
+                                value ||
+                                (type === 'Child' || type === 'Infant'
+                                  ? 'Mstr.'
+                                  : 'Mr.');
+
+                              return (
+                                <Dropdown
+                                  style={styles.dropdown}
+                                  placeholder="Select Title"
+                                  placeholderStyle={{ color: '#888' }}
+                                  selectedTextStyle={{ color: '#000' }}
+                                  data={options}
+                                  labelField="label"
+                                  valueField="value"
+                                  value={defaultValue}
+                                  onChange={item => onChange(item.value)}
+                                />
+                              );
+                            }}
+                          />
+
+                          <Controller
+                            control={control}
+                            name={`passengers.${index}.firstName` as const}
+                            rules={{ required: 'First name is required' }}
+                            render={({ field: { onChange, value } }) => (
+                              <TextInput
+                                style={{
+                                  borderWidth: 1,
+                                  borderColor: '#ccc',
+                                  borderRadius: 8,
+                                  padding: 10,
+                                  marginVertical: 5,
+                                }}
+                                placeholder="First Name"
+                                placeholderTextColor={'black'}
+                                value={value}
+                                onChangeText={onChange}
+                              />
+                            )}
+                          />
+                          {errors.passengers?.[index]?.firstName && (
+                            <Text style={{ color: 'red', fontSize: 12 }}>
+                              {errors.passengers[index]?.firstName?.message}
+                            </Text>
+                          )}
+
+                          <Controller
+                            control={control}
+                            name={`passengers.${index}.lastName` as const}
+                            rules={{ required: 'Last name is required' }}
+                            render={({ field: { onChange, value } }) => (
+                              <TextInput
+                                style={{
+                                  borderWidth: 1,
+                                  borderColor: '#ccc',
+                                  borderRadius: 8,
+                                  padding: 10,
+                                  marginVertical: 5,
+                                }}
+                                placeholder="Last Name"
+                                value={value}
+                                onChangeText={onChange}
+                                placeholderTextColor={'black'}
+                              />
+                            )}
+                          />
+                          {errors.passengers?.[index]?.lastName && (
+                            <Text style={{ color: 'red', fontSize: 12 }}>
+                              {errors.passengers[index]?.lastName?.message}
+                            </Text>
+                          )}
+
+                          <Controller
+                            control={control}
+                            name={`passengers.${index}.needWheelchair`}
+                            render={({ field: { onChange, value } }) => {
+                              const wheelchairOptions = [
+                                { label: 'No', value: 'NO' },
+                                { label: 'Yes', value: 'YES' },
+                              ];
+                              return (
+                                <Dropdown
+                                  style={styles.dropdown}
+                                  data={wheelchairOptions}
+                                  labelField="label"
+                                  valueField="value"
+                                  placeholder="Need Wheelchair?"
+                                  placeholderStyle={{ color: '#888' }}
+                                  selectedTextStyle={{ color: '#000' }}
+                                  value={value}
+                                  onChange={item => onChange(item.value)}
+                                />
+                              );
+                            }}
+                          />
+
+                          {isDobRequired(type) && (
+                            <Controller
+                              control={control}
+                              name={`passengers.${index}.dob` as const}
+                              rules={{ required: 'Date of birth is required' }}
+                              render={({ field: { onChange, value } }) => (
+                                <TextInput
+                                  placeholder="YYYY-MM-DD"
+                                  placeholderTextColor={'black'}
+                                  style={{
+                                    borderWidth: 1,
+                                    borderColor: '#ccc',
+                                    borderRadius: 8,
+                                    padding: 10,
+                                    marginVertical: 5,
+                                  }}
+                                  value={value}
+                                  onChangeText={onChange}
+                                />
+                              )}
+                            />
+                          )}
+
+                          {isPassportRequired(type) && (
+                            <Controller
+                              control={control}
+                              name={`passengers.${index}.passportNo` as const}
+                              rules={{ required: 'Passport No is required' }}
+                              render={({ field: { onChange, value } }) => (
+                                <TextInput
+                                  placeholder="Passport No"
+                                  placeholderTextColor={'black'}
+                                  style={{
+                                    borderWidth: 1,
+                                    borderColor: '#ccc',
+                                    borderRadius: 8,
+                                    padding: 10,
+                                    marginVertical: 5,
+                                  }}
+                                  value={value}
+                                  onChangeText={onChange}
+                                />
+                              )}
+                            />
+                          )}
+
+                          {isFLightInternational() && (
+                            <>
+                              <Controller
+                                control={control}
+                                name={
+                                  `passengers.${index}.passport_expirydate` as const
+                                }
+                                rules={{
+                                  required: 'Passport Expiry Date is required',
+                                }}
+                                render={({ field: { onChange, value } }) => (
+                                  <TextInput
+                                    placeholder="Expiry YYYY-MM-DD"
+                                    placeholderTextColor={'black'}
+                                    style={{
+                                      borderWidth: 1,
+                                      borderColor: '#ccc',
+                                      borderRadius: 8,
+                                      padding: 10,
+                                      marginVertical: 5,
+                                    }}
+                                    value={value}
+                                    onChangeText={onChange}
+                                  />
+                                )}
+                              />
+                              <Controller
+                                control={control}
+                                name={
+                                  `passengers.${index}.passport_issuing_country_code` as const
+                                }
+                                rules={{ required: 'Country Code is required' }}
+                                render={({ field: { onChange, value } }) => (
+                                  <TextInput
+                                    placeholder="Country Code"
+                                    placeholderTextColor={'black'}
+                                    style={{
+                                      borderWidth: 1,
+                                      borderColor: '#ccc',
+                                      borderRadius: 8,
+                                      padding: 10,
+                                      marginVertical: 5,
+                                    }}
+                                    value={value}
+                                    onChangeText={onChange}
+                                  />
+                                )}
+                              />
+                              <Controller
+                                control={control}
+                                name={
+                                  `passengers.${index}.nationality` as const
+                                }
+                                rules={{ required: 'Nationality is required' }}
+                                render={({ field: { onChange, value } }) => (
+                                  <TextInput
+                                    placeholder="Nationality"
+                                    placeholderTextColor={'black'}
+                                    style={{
+                                      borderWidth: 1,
+                                      borderColor: '#ccc',
+                                      borderRadius: 8,
+                                      padding: 10,
+                                      marginVertical: 5,
+                                    }}
+                                    value={value}
+                                    onChangeText={onChange}
+                                  />
+                                )}
+                              />
+                            </>
+                          )}
+                        </View>
+                      );
+                    })}
                   </>
                 )}
               </View>
             );
           })}
-        </>
-      )}
-    </View>
-  );
-})}
 
-
-        <View
-          style={{
-            backgroundColor: '#fff',
-            padding: 15,
-            borderRadius: 10,
-            marginBottom: 15,
-            elevation: 2,
-          }}
-        >
-          <Controller
-            control={control}
-            name="mobile_no"
-            rules={{
-              required: 'Mobile number is required',
-              pattern: {
-                value: /^[0-9]{10}$/,
-                message: 'Enter a valid 10-digit number',
-              },
+          <View
+            style={{
+              backgroundColor: '#fff',
+              padding: 15,
+              borderRadius: 10,
+              marginBottom: 15,
+              elevation: 2,
             }}
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                placeholder="Mobile Number"
-                keyboardType="number-pad"
-                style={{
-                  borderWidth: 1,
-                  borderColor: '#ccc',
-                  borderRadius: 8,
-                  padding: 10,
-                  marginVertical: 5,
-                }}
-                value={value}
-                placeholderTextColor={'black'}
-                onChangeText={onChange}
-              />
-            )}
-          />
-          {errors.mobile_no && (
-            <Text style={{ color: 'red', fontSize: 12 }}>
-              {errors.mobile_no.message}
-            </Text>
-          )}
-
-          <Controller
-            control={control}
-            name="email_id"
-            rules={{
-              required: 'Email is required',
-              pattern: {
-                value: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/,
-                message: 'Enter a valid email',
-              },
-            }}
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                placeholder="Email"
-                keyboardType="email-address"
-                placeholderTextColor={'black'}
-                style={{
-                  borderWidth: 1,
-                  borderColor: '#ccc',
-                  borderRadius: 8,
-                  padding: 10,
-                  marginVertical: 5,
-                }}
-                value={value}
-                onChangeText={onChange}
-              />
-            )}
-          />
-          {errors.email_id && (
-            <Text style={{ color: 'red', fontSize: 12 }}>
-              {errors.email_id.message}
-            </Text>
-          )}
-          <Controller
-            control={control}
-            name="display_price"
-            rules={{
-              required: 'Display Fare Price is required',
-              pattern: { value: /^[0-9]*$/, message: 'Must be a number' },
-            }}
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                placeholder="Display Price"
-                placeholderTextColor={'black'}
-                style={{
-                  borderWidth: 1,
-                  borderColor: '#ccc',
-                  borderRadius: 8,
-                  padding: 10,
-                  marginVertical: 5,
-                }}
-                value={value}
-                onChangeText={onChange}
-              />
-            )}
-          />
-          {errors?.display_price && (
-            <Text style={{ color: 'red', fontSize: 12 }}>
-              {errors.display_price.message}
-            </Text>
-          )}
-        </View>
-        <View style={styles.card}>
-          <Text style={styles.title}>Payment Mode</Text>
-          <Controller
-            control={control}
-            name="payment_mode"
-            rules={{ required: 'Payment mode is required' }}
-            render={({ field: { value, onChange } }) => (
-              <View style={styles.radioContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.radioButton,
-                    value === 'deposit' && styles.radioButtonSelected,
-                  ]}
-                  onPress={() => onChange('deposit')}
-                >
-                  <Text style={styles.radioLabel}>Deposit</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.radioButton,
-                    value === 'online' && styles.radioButtonSelected,
-                  ]}
-                  onPress={() => onChange('online')}
-                >
-                  <Text style={styles.radioLabel}>Online Payment</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          />
-          {errors.payment_mode && (
-            <Text style={styles.errorText}>{errors.payment_mode.message}</Text>
-          )}
-          {watch('payment_mode') === 'online' && (
+          >
             <Controller
               control={control}
-              name="payment_gateway"
-              rules={{ required: 'Please select a payment gateway' }}
+              name="mobile_no"
+              rules={{
+                required: 'Mobile number is required',
+                pattern: {
+                  value: /^[0-9]{10}$/,
+                  message: 'Enter a valid 10-digit number',
+                },
+              }}
               render={({ field: { onChange, value } }) => (
-                <View style={{ marginTop: 10 }}>
-                  <Text style={{ marginBottom: 5 }}>
-                    Select Payment Gateway
-                  </Text>
+                <TextInput
+                  placeholder="Mobile Number"
+                  keyboardType="number-pad"
+                  style={{
+                    borderWidth: 1,
+                    borderColor: '#ccc',
+                    borderRadius: 8,
+                    padding: 10,
+                    marginVertical: 5,
+                  }}
+                  value={value}
+                  placeholderTextColor={'black'}
+                  onChangeText={onChange}
+                />
+              )}
+            />
+            {errors.mobile_no && (
+              <Text style={{ color: 'red', fontSize: 12 }}>
+                {errors.mobile_no.message}
+              </Text>
+            )}
 
-                  <Dropdown
-                    style={styles.dropdown}
-                    placeholder="-- Choose Gateway --"
-                    placeholderStyle={{ color: '#888' }}
-                    selectedTextStyle={{ color: '#000' }}
-                    itemTextStyle={{ color: '#000' }}
-                    data={paymentModule.map(gateway => ({
-                      label: String(gateway.payment_module ?? "").replace(/^./, c => c.toUpperCase()),
-                      value: gateway.id,
-                    }))}
-                    labelField="label"
-                    valueField="value"
-                    value={value}
-                    onChange={item => {
-                      onChange(item.value);
-                    }}
-                  />
+            <Controller
+              control={control}
+              name="email_id"
+              rules={{
+                required: 'Email is required',
+                pattern: {
+                  value: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/,
+                  message: 'Enter a valid email',
+                },
+              }}
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  placeholder="Email"
+                  keyboardType="email-address"
+                  placeholderTextColor={'black'}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: '#ccc',
+                    borderRadius: 8,
+                    padding: 10,
+                    marginVertical: 5,
+                  }}
+                  value={value}
+                  onChangeText={onChange}
+                />
+              )}
+            />
+            {errors.email_id && (
+              <Text style={{ color: 'red', fontSize: 12 }}>
+                {errors.email_id.message}
+              </Text>
+            )}
+            <Controller
+              control={control}
+              name="display_price"
+              rules={{
+                required: 'Display Fare Price is required',
+                pattern: { value: /^[0-9]*$/, message: 'Must be a number' },
+              }}
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  placeholder="Display Price"
+                  placeholderTextColor={'black'}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: '#ccc',
+                    borderRadius: 8,
+                    padding: 10,
+                    marginVertical: 5,
+                  }}
+                  value={value}
+                  onChangeText={onChange}
+                />
+              )}
+            />
+            {errors?.display_price && (
+              <Text style={{ color: 'red', fontSize: 12 }}>
+                {errors.display_price.message}
+              </Text>
+            )}
+          </View>
+          <View style={styles.card}>
+            <Text style={styles.title}>Payment Mode</Text>
+            <Controller
+              control={control}
+              name="payment_mode"
+              rules={{ required: 'Payment mode is required' }}
+              render={({ field: { value, onChange } }) => (
+                <View style={styles.radioContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.radioButton,
+                      value === 'deposit' && styles.radioButtonSelected,
+                    ]}
+                    onPress={() => onChange('deposit')}
+                  >
+                    <Text style={styles.radioLabel}>Deposit</Text>
+                  </TouchableOpacity>
 
-                  {errors.payment_gateway && (
-                    <Text style={styles.errorText}>
-                      {errors.payment_gateway.message}
-                    </Text>
-                  )}
+                  <TouchableOpacity
+                    style={[
+                      styles.radioButton,
+                      value === 'online' && styles.radioButtonSelected,
+                    ]}
+                    onPress={() => onChange('online')}
+                  >
+                    <Text style={styles.radioLabel}>Online Payment</Text>
+                  </TouchableOpacity>
                 </View>
               )}
             />
-          )}
-
-          <Text style={styles.payable}>
-            Payable Amount:{' '}
-            <Text style={{ color: '#1d4ed8' }}>Rs. {watch('total_price')}</Text>
-          </Text>
-        </View>
-        <Controller
-          control={control}
-          name="terms"
-          rules={{ required: 'You must agree to the Terms & Conditions' }}
-          render={({ field: { value, onChange } }) => (
-            <View style={styles.termsContainer}>
-              <Checkbox
-                status={value ? 'checked' : 'unchecked'}
-                onPress={() => onChange(!value)}
-              />
-              <Text style={styles.termsText}>
-                Yes, I Agree To The{' '}
-                <Text
-                  style={{ color: 'blue' }}
-                  onPress={() =>
-                    Linking.openURL(
-                      'https://travel24hrs.com/terms-and-condition',
-                    )
-                  }
-                >
-                  Terms & Conditions
-                </Text>
+            {errors.payment_mode && (
+              <Text style={styles.errorText}>
+                {errors.payment_mode.message}
               </Text>
-            </View>
-          )}
-        />
+            )}
+            {watch('payment_mode') === 'online' && (
+              <Controller
+                control={control}
+                name="payment_gateway"
+                rules={{ required: 'Please select a payment gateway' }}
+                render={({ field: { onChange, value } }) => (
+                  <View style={{ marginTop: 10 }}>
+                    <Text style={{ marginBottom: 5 }}>
+                      Select Payment Gateway
+                    </Text>
 
-        {errors.terms && (
-          <Text style={styles.errorText}>{errors.terms.message}</Text>
-        )}
+                    <Dropdown
+                      style={styles.dropdown}
+                      placeholder="-- Choose Gateway --"
+                      placeholderStyle={{ color: '#888' }}
+                      selectedTextStyle={{ color: '#000' }}
+                      itemTextStyle={{ color: '#000' }}
+                      data={paymentModule.map(gateway => ({
+                        label: String(gateway.payment_module ?? '').replace(
+                          /^./,
+                          c => c.toUpperCase(),
+                        ),
+                        value: gateway.id,
+                      }))}
+                      labelField="label"
+                      valueField="value"
+                      value={value}
+                      onChange={item => {
+                        onChange(item.value);
+                      }}
+                    />
 
-        <TouchableOpacity
-          style={{
-            backgroundColor: '#1e40af',
-            padding: 15,
-            borderRadius: 8,
-            alignItems: 'center',
-            marginBottom: 20,
-          }}
-          onPress={handleSubmit(onSubmit)}
-          disabled={loader}
-        >
-          {loader ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Book Now</Text>
+                    {errors.payment_gateway && (
+                      <Text style={styles.errorText}>
+                        {errors.payment_gateway.message}
+                      </Text>
+                    )}
+                  </View>
+                )}
+              />
+            )}
+
+            <Text style={styles.payable}>
+              Payable Amount:{' '}
+              <Text style={{ color: '#1d4ed8' }}>
+                Rs. {watch('total_price')}
+              </Text>
+            </Text>
+          </View>
+          <Controller
+            control={control}
+            name="terms"
+            rules={{ required: 'You must agree to the Terms & Conditions' }}
+            render={({ field: { value, onChange } }) => (
+              <View style={styles.termsContainer}>
+                <Checkbox
+                  status={value ? 'checked' : 'unchecked'}
+                  onPress={() => onChange(!value)}
+                />
+                <Text style={styles.termsText}>
+                  Yes, I Agree To The{' '}
+                  <Text
+                    style={{ color: 'blue' }}
+                    onPress={() =>
+                      Linking.openURL(
+                        'https://travel24hrs.com/terms-and-condition',
+                      )
+                    }
+                  >
+                    Terms & Conditions
+                  </Text>
+                </Text>
+              </View>
+            )}
+          />
+
+          {errors.terms && (
+            <Text style={styles.errorText}>{errors.terms.message}</Text>
           )}
-        </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{
+              backgroundColor: '#1e40af',
+              padding: 15,
+              borderRadius: 8,
+              alignItems: 'center',
+              marginBottom: 20,
+            }}
+            onPress={handleSubmit(onSubmit)}
+            disabled={loader}
+          >
+            {loader ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+                Book Now
+              </Text>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
       </ScrollView>
-    </ScrollView>
+    </View>
   );
 }
 
 export default BookingTicket;
 
 export const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f3f4f6', padding: 12 },
+  container: { flex: 1, backgroundColor: '#f3f4f6' },
 
   airlineLogoBox: {
     padding: 6,
@@ -1118,20 +1152,20 @@ export const styles = StyleSheet.create({
     marginVertical: 10,
   },
   collapHeader: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  paddingVertical: 10,
-  paddingHorizontal: 12,
-  borderRadius: 8,
-  backgroundColor: '#eef2ff',
-  marginBottom: 12,
-},
-collapHeaderText: {
-  fontSize: 18,
-  fontWeight: 'bold',
-},
-chev: { fontSize: 18 },
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#eef2ff',
+    marginBottom: 12,
+  },
+  collapHeaderText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  chev: { fontSize: 18 },
 
   termsText: {
     marginLeft: 8,
@@ -1174,6 +1208,11 @@ chev: { fontSize: 18 },
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 10,
+  },
+  backArrow: {
+    fontSize: 22,
+    color: '#000',
+    paddingRight: 10,
   },
   picker: {
     height: 45,

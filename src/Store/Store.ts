@@ -2,6 +2,8 @@ import { configureStore } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import bookingDetailsReducer from './BookingDetails/bookingDetails';
+import editBookingReducer from './editBookingSlice/editBookingSlice';
+
 
 const persistConfig = {
   key: 'root',
@@ -13,6 +15,7 @@ const persistedReducer = persistReducer(persistConfig, bookingDetailsReducer);
 export const Store = configureStore({
   reducer: {
     bookingDetails: persistedReducer,
+    editBooking: editBookingReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -24,3 +27,4 @@ export const Store = configureStore({
 export const persistor = persistStore(Store);
 export type RootState = ReturnType<typeof Store.getState>;
 export type AppDispatch = typeof Store.dispatch;
+

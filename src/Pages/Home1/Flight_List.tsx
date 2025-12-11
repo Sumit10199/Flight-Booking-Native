@@ -2,22 +2,17 @@ import React from 'react-native';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import FlightCard from './flightCard';
 import { useNavigation } from '@react-navigation/native';
+import Header from '../../Components/Header/Header';
+
 
 const FlightListPage = ({ route }: { route: any }) => {
   const { flights, airlines } = route.params;
   const navigation = useNavigation();
-
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backArrow}>{'<'}</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.title}>Search Result</Text>
-
-        <View style={{ width: 25 }} />
-      </View>
+      <View>
+              <Header title="Search Result" onBack={() => navigation.goBack()} />
+            </View>
       <View style={{ flex: 1 }}>
         <FlightCard flightListData={flights} airlines={airlines} />
       </View>

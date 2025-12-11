@@ -252,12 +252,12 @@ export default function NameChangeRequestScreen() {
                 onChangeText={(t) =>
                   setForm((prev) => ({
                     ...prev,
-                    [id]: { ...(prev[id] || {}), first: t.toUpperCase() },
+                    [id]: { ...(prev[id] || {}), first: t },
                   }))
                 }
                 placeholder="First Name"
                 style={s.input}
-                autoCapitalize="characters"
+                
               />
 
               {/* Last Name */}
@@ -266,12 +266,12 @@ export default function NameChangeRequestScreen() {
                 onChangeText={(t) =>
                   setForm((prev) => ({
                     ...prev,
-                    [id]: { ...(prev[id] || {}), last: t.toUpperCase() },
+                    [id]: { ...(prev[id] || {}), last: t },
                   }))
                 }
                 placeholder="Last Name"
                 style={s.input}
-                autoCapitalize="characters"
+                
               />
             </View>
           )}

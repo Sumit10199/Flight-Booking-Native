@@ -97,7 +97,7 @@ export default function CancellationRequest() {
 
       <View style={styles.cardRow}>
         <Text style={styles.label}>Passenger Type:</Text>
-        <Text style={styles.value}>{item.pax_type}</Text>
+        <Text style={styles.value}>{item.pax_type.charAt(0).toUpperCase() + item.pax_type.slice(1).toLowerCase()}</Text>
       </View>
 
       <View style={styles.cardRow}>

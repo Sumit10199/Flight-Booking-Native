@@ -105,79 +105,99 @@ export default function AccountStatementScreen() {
       <ScrollView contentContainerStyle={{ padding: 15 }}>
         <View style={styles.filterCard}>
           <Text style={styles.filterTitle}>Select Date</Text>
+          <View
+            style={{ flexDirection: 'row', justifyContent: 'space-between' }}
+          >
+            <View style={{ flex: 1, marginRight: 8 }}>
+              <Controller
+                control={control}
+                name="date1"
+                render={({ field }) => (
+                  <>
+                    <TouchableOpacity
+                      style={styles.inputBox}
+                      onPress={() => setShowDate1(true)}
+                    >
+                      <Text style={styles.inputText}>
+                        {field.value
+                          ? dayjs(field.value).format('DD-MM-YYYY')
+                          : 'From Date'}
+                      </Text>
+                    </TouchableOpacity>
 
-          <Controller
-            control={control}
-            name="date1"
-            render={({ field }) => (
-              <>
-                <TouchableOpacity
-                  style={styles.inputBox}
-                  onPress={() => setShowDate1(true)}
-                >
-                  <Text style={styles.inputText}>
-                    {field.value
-                      ? dayjs(field.value).format('DD-MM-YYYY')
-                      : 'From Date'}
-                  </Text>
-                </TouchableOpacity>
-                {errors.date1 && (
-                  <Text style={styles.errorText}>{errors.date1.message}</Text>
-                )}
+                    {errors.date1 && (
+                      <Text style={styles.errorText}>
+                        {errors.date1.message}
+                      </Text>
+                    )}
 
-                {showDate1 && (
-                  <DateTimePicker
-                    value={field.value ? new Date(field.value) : new Date()}
-                    mode="date"
-                    display="calendar"
-                    onChange={(event, selected) => {
-                      setShowDate1(false);
-                      if (selected) {
-                        const formatted = selected.toISOString().split('T')[0];
-                        field.onChange(formatted);
-                      }
-                    }}
-                  />
+                    {showDate1 && (
+                      <DateTimePicker
+                        value={field.value ? new Date(field.value) : new Date()}
+                        mode="date"
+                        display="calendar"
+                        onChange={(event, selected) => {
+                          setShowDate1(false);
+                          if (selected) {
+                            const formatted = selected
+                              .toISOString()
+                              .split('T')[0];
+                            field.onChange(formatted);
+                          }
+                        }}
+                      />
+                    )}
+                  </>
                 )}
-              </>
-            )}
-          />
-          <Controller
-            control={control}
-            name="date2"
-            render={({ field }) => (
-              <>
-                <TouchableOpacity
-                  style={styles.inputBox}
-                  onPress={() => setShowDate2(true)}
-                >
-                  <Text style={styles.inputText}>
-                    {field.value
-                      ? dayjs(field.value).format('DD-MM-YYYY')
-                      : 'To Date'}
-                  </Text>
-                </TouchableOpacity>
-                {errors.date2 && (
-                  <Text style={styles.errorText}>{errors.date2.message}</Text>
-                )}
+              />
+            </View>
 
-                {showDate2 && (
-                  <DateTimePicker
-                    value={field.value ? new Date(field.value) : new Date()}
-                    mode="date"
-                    display="calendar"
-                    onChange={(event, selected) => {
-                      setShowDate2(false);
-                      if (selected) {
-                        const formatted = selected.toISOString().split('T')[0];
-                        field.onChange(formatted);
-                      }
-                    }}
-                  />
+            <View style={{ flex: 1, marginLeft: 8 }}>
+              <Controller
+                control={control}
+                name="date2"
+                render={({ field }) => (
+                  <>
+                    <TouchableOpacity
+                      style={styles.inputBox}
+                      onPress={() => setShowDate2(true)}
+                    >
+                      <Text style={styles.inputText}>
+                        {field.value
+                          ? dayjs(field.value).format('DD-MM-YYYY')
+                          : 'To Date'}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {errors.date2 && (
+                      <Text style={styles.errorText}>
+                        {errors.date2.message}
+                      </Text>
+                    )}
+
+                    {showDate2 && (
+                      <DateTimePicker
+                        value={field.value ? new Date(field.value) : new Date()}
+                        mode="date"
+                        display="calendar"
+                        onChange={(event, selected) => {
+                          setShowDate2(false);
+                          if (selected) {
+                            const formatted = selected
+                              .toISOString()
+                              .split('T')[0];
+                            field.onChange(formatted);
+                          }
+                        }}
+                      />
+                    )}
+                  </>
                 )}
-              </>
-            )}
-          />
+              />
+            </View>
+          </View>
+
+          {/* Buttons */}
           <View style={styles.btnRow}>
             <TouchableOpacity
               style={styles.searchBtn}
@@ -197,6 +217,7 @@ export default function AccountStatementScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
         {loader ? (
           <ActivityIndicator size={40} style={{ marginTop: 50 }} />
         ) : statement.length === 0 ? (
@@ -210,8 +231,6 @@ export default function AccountStatementScreen() {
             keyExtractor={item => String(item.id)}
             renderItem={({ item, index }) => (
               <View style={styles.card}>
-                <Text style={styles.cardTitle}>#{index + 1}</Text>
-
                 <View style={styles.row}>
                   <Text style={styles.label}>Date:</Text>
                   <Text style={styles.value}>
@@ -226,12 +245,22 @@ export default function AccountStatementScreen() {
 
                 <View style={styles.row}>
                   <Text style={styles.label}>Remark:</Text>
-                  <Text style={[styles.value, { flex: 1, flexWrap: 'wrap', textAlign: 'right' }]}>{item.remarks}</Text>
+                  <Text
+                    style={[
+                      styles.value,
+                      { flex: 1, flexWrap: 'wrap', textAlign: 'right' },
+                    ]}
+                  >
+                    {item.remarks}
+                  </Text>
                 </View>
 
                 <View style={styles.row}>
                   <Text style={styles.label}>Balance Type:</Text>
-                  <Text style={styles.value}>{item.bal_type}</Text>
+                  <Text style={styles.value}>
+                    {item.bal_type.charAt(0).toUpperCase() +
+                      item.bal_type.slice(1).toLowerCase()}
+                  </Text>
                 </View>
 
                 <View style={styles.row}>

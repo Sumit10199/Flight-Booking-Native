@@ -206,7 +206,8 @@ const PaymentScreen = () => {
               <Dropdown
                 style={styles.dropdown}
                 data={paymentModule.map(g => ({
-                  label: g.payment_module,
+                  label:g.payment_module .charAt(0).toUpperCase() + g.payment_module .slice(1).toLowerCase()
+,
                   value: g.id,
                 }))}
                 labelField="label"
